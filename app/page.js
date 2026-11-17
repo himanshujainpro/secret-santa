@@ -44,6 +44,9 @@ export default function Home() {
   const [showGiftee, setShowGiftee] = useState(false);
   const [showRules, setShowRules] = useState(false);
   const [currentIdeaIndex, setCurrentIdeaIndex] = useState(0);
+  const [giftTitle, setGiftTitle] = useState("");
+  const [giftPitch, setGiftPitch] = useState("");
+  const [giftSavedMsg, setGiftSavedMsg] = useState("");
   const [votes, setVotes] = useState({});
   const [errorMsg, setErrorMsg] = useState("");
   const [toastMsg, setToastMsg] = useState("");
@@ -72,10 +75,16 @@ export default function Home() {
       setAuth(true);
       setSkew(j.now - Date.now());
       setD(j);
+
+      // Pre-fill my gift if already saved and user hasn't edited locally
+      if (j.myGift && !giftTitle) {
+        setGiftTitle(j.myGift.title || "");
+        setGiftPitch(j.myGift.pitch || "");
+      }
     } catch {
       // keep state on transient blip
     }
-  }, []);
+  }, [giftTitle]);
 
   useEffect(() => {
     load();
@@ -108,6 +117,17 @@ export default function Home() {
     }
   };
 
+  const saveGift = async (e) => {
+    e.preventDefault();
+    if (!giftTitle.trim()) {
+      setErrorMsg("Please enter a gift title!");
+      return;
+    }
+    await act("submit_gift", { title: giftTitle, pitch: giftPitch });
+    setGiftSavedMsg("✅ Anonymous pitch saved! It will appear on screen during their turn.");
+    setTimeout(() => setGiftSavedMsg(""), 4000);
+  };
+
   const nextIdea = (e) => {
     e.stopPropagation();
     setCurrentIdeaIndex((prev) => (prev + 1) % IDEA_SPARKS.length);
@@ -130,7 +150,7 @@ export default function Home() {
             How Virtual Secret Santa Works 🎁
           </h2>
           <p style={{ color: "var(--text-muted)", fontSize: "14px", marginBottom: "20px" }}>
-            No shopping, no delivery, zero money spent! This is a fast, fun live pitching game for the whole team.
+            No shopping, ₹0 budget! Type an anonymous gift pitch in the app, and see if the receiver can guess who wrote it.
           </p>
 
           <div className="rules-card-item">
@@ -140,19 +160,19 @@ export default function Home() {
                 1. 100% Confidential Draw
               </div>
               <div style={{ fontSize: "13px", color: "var(--text-muted)" }}>
-                Once drawn, only you see your giftee on your screen. Do not leak or hint who you got until your turn!
+                Once drawn, only you see your giftee on your screen. Do not tell anyone who you got!
               </div>
             </div>
           </div>
 
           <div className="rules-card-item">
-            <div className="rules-icon-badge">⏱</div>
+            <div className="rules-icon-badge">📝</div>
             <div>
               <div style={{ fontWeight: 700, fontSize: "14px", color: "var(--text-main)" }}>
-                2. The 90-Second Live Pitch
+                2. Type Your Anonymous Pitch (No Voice Giveaway!)
               </div>
               <div style={{ fontSize: "13px", color: "var(--text-muted)" }}>
-                When your giftee appears on the stage, pitch your imaginary gift like a TV commercial or Shark Tank presentation. Explain why it fits them perfectly or hilariously!
+                Type your funny gift idea and pitch note directly into the app. When their turn arrives, your note appears anonymously on screen—voice recognition won't spoil the mystery!
               </div>
             </div>
           </div>
@@ -161,10 +181,10 @@ export default function Home() {
             <div className="rules-icon-badge">🕵️‍♂️</div>
             <div>
               <div style={{ fontWeight: 700, fontSize: "14px", color: "var(--text-main)" }}>
-                3. The Receiver Takes a Guess
+                3. The Receiver Reads & Guesses
               </div>
               <div style={{ fontSize: "13px", color: "var(--text-muted)" }}>
-                After hearing the pitch, the receiver gets one chance on the call to guess: <em>"Who gave me this?"</em> before the organizer reveals the secret giver.
+                The receiver reads their mystery pitch note aloud on call and guesses: <em>"Who in the team wrote this for me?"</em> before the organizer reveals the giver!
               </div>
             </div>
           </div>
@@ -176,7 +196,7 @@ export default function Home() {
                 4. Vote for Awards
               </div>
               <div style={{ fontSize: "13px", color: "var(--text-muted)" }}>
-                Once all pitches conclude, everyone casts their votes for <strong>Most Thoughtful</strong>, <strong>Most Ridiculous</strong>, and <strong>Best Pitch</strong>!
+                After all pitches, everyone votes for <strong>Most Thoughtful</strong>, <strong>Most Ridiculous</strong>, and <strong>Best Pitch</strong>!
               </div>
             </div>
           </div>
@@ -224,7 +244,7 @@ export default function Home() {
             </div>
             <h1 className="hero-title">Virtual Secret Santa</h1>
             <p className="hero-subtitle">
-              Live gifting, zero prep, 90 seconds on the clock, and hilarious pitch reveals.
+              Anonymous gift pitches on screen, zero prep, 90 seconds on the clock, and hilarious reveals.
             </p>
 
             <button
@@ -245,17 +265,17 @@ export default function Home() {
               <div className="step-card">
                 <div className="step-number">Step 01</div>
                 <div className="step-title">Join Lobby</div>
-                <div className="step-desc">Sign in with your Google account and enter the room.</div>
+                <div className="step-desc">Sign in with Google and enter the game lobby.</div>
               </div>
               <div className="step-card">
                 <div className="step-number">Step 02</div>
-                <div className="step-title">Secret Draw</div>
-                <div className="step-desc">Your giftee is private and locked only to your screen.</div>
+                <div className="step-title">Secret Pitch Note</div>
+                <div className="step-desc">Type your gift pitch into the app completely anonymously.</div>
               </div>
               <div className="step-card">
                 <div className="step-number">Step 03</div>
-                <div className="step-title">Pitch & Guess</div>
-                <div className="step-desc">90-second live pitch, receiver guesses, and award voting!</div>
+                <div className="step-title">Guess & Reveal</div>
+                <div className="step-desc">Text appears on screen, receiver guesses who wrote it!</div>
               </div>
             </div>
           </div>
@@ -281,7 +301,7 @@ export default function Home() {
   // ---------------------------------------------------------------------------
   // 3. Authenticated Game View
   // ---------------------------------------------------------------------------
-  const { me, phase, order, idx, category, startedAt, results, myMatch, myVotes, votesIn } = d;
+  const { me, phase, order, idx, category, startedAt, results, myMatch, myVotes, votesIn, activeGift } = d;
   const drawn = phase === "drawn";
   const nameOf = (id) => d.players.find((p) => p.id === id)?.name || "Colleague";
   const currentReceiverId = order[idx];
@@ -375,7 +395,6 @@ export default function Home() {
                   </div>
                 </div>
 
-                {/* Left/Join Option: Leave button */}
                 <button
                   onClick={() => {
                     if (confirm("Leave the lobby? You won't be included in the secret draw.")) {
@@ -412,15 +431,69 @@ export default function Home() {
                   <div className="secret-recipient-name">
                     {nameOf(myMatch)}
                   </div>
-                  <div style={{ fontSize: "13px", color: "var(--text-muted)", marginTop: "6px" }}>
-                    💡 Pitch a gift that fits them: inside joke, Monday problem solver, or ridiculous desk item!
+                  <div style={{ fontSize: "13px", color: "var(--text-muted)", marginTop: "4px", marginBottom: "16px" }}>
+                    💡 Type your gift idea below. It will appear on screen <strong>completely anonymously</strong> so nobody recognizes your voice!
+                  </div>
+
+                  {/* Anonymous Gift Submission Form */}
+                  <div
+                    onClick={(e) => e.stopPropagation()}
+                    style={{ textAlign: "left", background: "#FFFFFF", padding: "18px", borderRadius: "14px", border: "1px solid #E2E8F0" }}
+                  >
+                    <div style={{ marginBottom: "12px" }}>
+                      <label style={{ display: "block", fontSize: "12px", fontWeight: 700, textTransform: "uppercase", color: "var(--text-muted)", marginBottom: "4px" }}>
+                        Gift Title / Idea
+                      </label>
+                      <input
+                        type="text"
+                        className="text-input"
+                        placeholder="e.g. Heated Arctic Suit for the 24°C Office AC"
+                        value={giftTitle}
+                        onChange={(e) => setGiftTitle(e.target.value)}
+                      />
+                    </div>
+
+                    <div style={{ marginBottom: "12px" }}>
+                      <label style={{ display: "block", fontSize: "12px", fontWeight: 700, textTransform: "uppercase", color: "var(--text-muted)", marginBottom: "4px" }}>
+                        Why they need it (Anonymous Pitch Note)
+                      </label>
+                      <textarea
+                        className="text-input"
+                        rows={3}
+                        placeholder="e.g. Because even in summer they wear 3 hoodies to work! This suit comes with built-in heaters and hot tea dispenser."
+                        value={giftPitch}
+                        onChange={(e) => setGiftPitch(e.target.value)}
+                      />
+                    </div>
+
+                    {giftSavedMsg && (
+                      <div style={{ fontSize: "13px", color: "#166534", fontWeight: 600, marginBottom: "10px" }}>
+                        {giftSavedMsg}
+                      </div>
+                    )}
+
+                    <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+                      <button
+                        onClick={saveGift}
+                        disabled={isActing}
+                        className="btn btn-black btn-sm"
+                      >
+                        Save Anonymous Pitch 💾
+                      </button>
+
+                      {d.myGift && (
+                        <span style={{ fontSize: "12px", color: "#16A34A", fontWeight: 600 }}>
+                          ✓ Saved in game
+                        </span>
+                      )}
+                    </div>
                   </div>
 
                   {/* Pitch Idea Spark Generator */}
-                  <div className="idea-box" onClick={(e) => e.stopPropagation()}>
+                  <div className="idea-box" onClick={(e) => e.stopPropagation()} style={{ marginTop: "16px" }}>
                     <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "6px" }}>
                       <span style={{ fontSize: "12px", fontWeight: 700, textTransform: "uppercase", color: "var(--brand-blue)", letterSpacing: "0.05em" }}>
-                        💡 Idea Prompt Spark
+                        💡 Idea Spark
                       </span>
                       <button
                         onClick={nextIdea}
@@ -439,7 +512,7 @@ export default function Home() {
                 <div>
                   <div style={{ fontSize: "32px", marginBottom: "8px" }}>👀</div>
                   <div style={{ fontWeight: 700, fontSize: "16px", color: "var(--text-main)" }}>
-                    Tap to reveal your giftee
+                    Tap to reveal your giftee & write your pitch
                   </div>
                   <div style={{ fontSize: "12px", color: "var(--text-muted)", marginTop: "4px" }}>
                     (Make sure nobody is peeking at your screen!)
@@ -467,7 +540,7 @@ export default function Home() {
                 <div style={{ fontSize: "36px", marginBottom: "10px" }}>🎁</div>
                 <h3 style={{ fontSize: "20px", fontWeight: 800, marginBottom: "6px" }}>Matches Drawn!</h3>
                 <p style={{ color: "var(--text-muted)", fontSize: "14px" }}>
-                  Check your secret giftee above and prepare your pitch. The organizer will start pitches shortly.
+                  Check your secret giftee above and type your anonymous pitch. The organizer will start pitches shortly.
                 </p>
               </div>
             )}
@@ -509,7 +582,7 @@ export default function Home() {
                 </div>
 
                 {/* Smooth Progress Bar */}
-                <div style={{ width: "100%", height: "6px", background: "#E2E8F0", borderRadius: "9999px", overflow: "hidden", margin: "0 auto 20px" }}>
+                <div style={{ width: "100%", height: "6px", background: "#E2E8F0", borderRadius: "9999px", overflow: "hidden", margin: "0 auto 16px" }}>
                   <div
                     style={{
                       height: "100%",
@@ -519,6 +592,27 @@ export default function Home() {
                     }}
                   />
                 </div>
+
+                {/* Anonymous Pitch Presentation on Stage */}
+                {activeGift ? (
+                  <div className="anonymous-stage-pitch">
+                    <div className="stage-gift-title">
+                      🎁 {activeGift.title}
+                    </div>
+                    {activeGift.pitch && (
+                      <div className="stage-gift-body">
+                        "{activeGift.pitch}"
+                      </div>
+                    )}
+                    <div style={{ fontSize: "12px", color: "var(--text-muted)", marginTop: "10px", fontWeight: 600 }}>
+                      👉 <strong>{nameOf(currentReceiverId)}</strong>, read this aloud! Who in the team wrote this for you? Take your guess on call!
+                    </div>
+                  </div>
+                ) : (
+                  <div style={{ background: "#F8FAFC", border: "1px dashed #CBD5E1", borderRadius: "14px", padding: "16px", margin: "16px 0", fontSize: "14px", color: "var(--text-muted)" }}>
+                    💬 No written pitch submitted yet — Giver, give a quick verbal hint or drop a clue in chat!
+                  </div>
+                )}
 
                 {/* Giver Guessing Box */}
                 <div className="giver-status-box">

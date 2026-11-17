@@ -6,7 +6,7 @@ export const dynamic = "force-dynamic";
 
 const CATS = [
   "Useless but hilarious",
-  "Something for their desk",
+  "Something for your desk",
   "A gift for their 2030 self",
   "A gift from your home city",
   "Something they’d never buy themselves",
@@ -35,18 +35,53 @@ async function who() {
 
 async function load() {
   const r = redis();
-  const [st, players, matches, votes] = await Promise.all([
-    r.get("fg:state"), r.hgetall("fg:players"), r.hgetall("fg:matches"), r.hgetall("fg:votes"),
+  const [st, players, matches, votes, gifts] = await Promise.all([
+    r.get("fg:state"),
+    r.hgetall("fg:players"),
+    r.hgetall("fg:matches"),
+    r.hgetall("fg:votes"),
+    r.hgetall("fg:gifts"),
   ]);
-  return { st: st || { phase: "lobby" }, players: players || {}, matches: matches || {}, votes: votes || {} };
+  return {
+    st: st || { phase: "lobby" },
+    players: players || {},
+    matches: matches || {},
+    votes: votes || {},
+    gifts: gifts || {},
+  };
 }
 
 // Matches are NEVER returned except a person's own giftee. Not even to organizers.
 export async function GET() {
   const me = await who();
   if (!me) return Response.json({ error: "auth" }, { status: 401 });
-  const { st, players, matches, votes } = await load();
+  const { st, players, matches, votes, gifts } = await load();
   const drawn = st.phase === "drawn";
+
+  // Active gift on the live stage (anonymous - author ID is never attached)
+  let activeGift = null;
+  if (drawn && st.order && st.idx >= 0 && st.idx < st.order.length) {
+    const recv = st.order[st.idx];
+    const giverId = Object.keys(matches).find((k) => matches[k] === recv);
+    if (giverId && gifts[giverId]) {
+      try {
+        activeGift = typeof gifts[giverId] === "string" ? JSON.parse(gifts[giverId]) : gifts[giverId];
+      } catch {
+        activeGift = null;
+      }
+    }
+  }
+
+  // The gift the currently logged-in user submitted for their own giftee
+  let myGift = null;
+  if (drawn && players[me.id] && gifts[me.id]) {
+    try {
+      myGift = typeof gifts[me.id] === "string" ? JSON.parse(gifts[me.id]) : gifts[me.id];
+    } catch {
+      myGift = null;
+    }
+  }
+
   return Response.json({
     now: Date.now(),
     me: { id: me.id, name: me.name, host: me.host, joined: !!players[me.id] },
@@ -60,6 +95,8 @@ export async function GET() {
     startedAt: st.startedAt || 0,
     results: st.results || null,
     myMatch: drawn && players[me.id] ? matches[me.id] || "" : "",
+    myGift,
+    activeGift,
     myVotes: votes[me.id] || null,
     votesIn: me.host ? Object.keys(votes).length : null,
   });
@@ -86,6 +123,12 @@ export async function POST(req) {
   } else if (A === "leave") {
     if (drawn) return bad("The draw already happened.");
     await r.hdel("fg:players", me.id);
+  } else if (A === "submit_gift") {
+    if (!drawn || !players[me.id]) return bad("Not allowed.");
+    const title = (b.title || "").trim().slice(0, 100);
+    const pitch = (b.pitch || "").trim().slice(0, 600);
+    if (!title) return bad("Please enter a gift title.");
+    await r.hset("fg:gifts", { [me.id]: JSON.stringify({ title, pitch }) });
   } else if (A === "remove") {
     if (drawn) return bad("Reset the draw first.");
     await r.hdel("fg:players", String(b.id));
@@ -96,6 +139,7 @@ export async function POST(req) {
     const m = {};
     s.forEach((g, i) => (m[g] = s[(i + 1) % s.length]));
     await r.del("fg:matches");
+    await r.del("fg:gifts");
     await r.hset("fg:matches", m);
     await r.set("fg:state", {
       phase: "drawn", order: shuf(s), idx: -1, revealed: false,
@@ -109,7 +153,6 @@ export async function POST(req) {
     await save({ idx: Math.min((st.idx ?? -1) + 1, st.order.length), revealed: false, giver: "", startedAt: Date.now() });
   } else if (A === "addTime") {
     if (!drawn || !st.startedAt) return bad("No active pitch.");
-    // Add 30 seconds to the timer
     await save({ startedAt: (st.startedAt || Date.now()) + 30000 });
   } else if (A === "reveal") {
     const recv = st.order?.[st.idx];
@@ -125,7 +168,7 @@ export async function POST(req) {
     };
     await save({ results: { a: top("a"), b: top("b"), c: top("c") } });
   } else if (A === "reset") {
-    await Promise.all([r.del("fg:state"), r.del("fg:matches"), r.del("fg:votes")]);
+    await Promise.all([r.del("fg:state"), r.del("fg:matches"), r.del("fg:votes"), r.del("fg:gifts")]);
   } else if (A === "vote") {
     if (!drawn || !players[me.id]) return bad("Not allowed.");
     const v = {};
