@@ -4,6 +4,19 @@ import { signIn, signOut } from "next-auth/react";
 
 const PITCH_DURATION = 90;
 
+const IDEA_SPARKS = [
+  "A subscription that delivers emergency caffeine whenever a meeting runs 5 minutes over.",
+  "A custom golden keyboard that only has an 'Enter' key and an 'Urgent' button.",
+  "An AI hologram twin that attends 9 AM Monday standups on their behalf.",
+  "A high-tech noise-cancelling headset that translates corporate buzzwords into plain English.",
+  "A robotic desktop arm that automatically high-fives them every time they close a ticket.",
+  "An emergency panic button on their desk that plays the Rocky theme song on command.",
+  "A personalized coffee mug with their most-used Slack reaction printed on the handle.",
+  "A lifetime supply of funny socks with their own face printed on them.",
+  "A desk plant with an automated voice reminder that yells 'DRINK WATER!' every 45 minutes.",
+  "An executive golden trophy for 'Surviving meetings that could have been an email'."
+];
+
 function ScansLogo() {
   return (
     <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
@@ -29,9 +42,24 @@ export default function Home() {
   const [skew, setSkew] = useState(0);
   const [now, setNow] = useState(Date.now());
   const [showGiftee, setShowGiftee] = useState(false);
+  const [showRules, setShowRules] = useState(false);
+  const [currentIdeaIndex, setCurrentIdeaIndex] = useState(0);
   const [votes, setVotes] = useState({});
   const [errorMsg, setErrorMsg] = useState("");
+  const [toastMsg, setToastMsg] = useState("");
   const [isActing, setIsActing] = useState(false);
+
+  const showToast = (msg) => {
+    setToastMsg(msg);
+    setTimeout(() => setToastMsg(""), 3000);
+  };
+
+  const copyGameLink = () => {
+    if (typeof window !== "undefined") {
+      navigator.clipboard.writeText(window.location.origin);
+      showToast("Link copied to clipboard! Share it on Slack or Teams 🚀");
+    }
+  };
 
   const load = useCallback(async () => {
     try {
@@ -45,7 +73,7 @@ export default function Home() {
       setSkew(j.now - Date.now());
       setD(j);
     } catch {
-      // keep previous state on transient network blip
+      // keep state on transient blip
     }
   }, []);
 
@@ -80,17 +108,111 @@ export default function Home() {
     }
   };
 
+  const nextIdea = (e) => {
+    e.stopPropagation();
+    setCurrentIdeaIndex((prev) => (prev + 1) % IDEA_SPARKS.length);
+  };
+
+  // ---------------------------------------------------------------------------
+  // Rules Modal Component
+  // ---------------------------------------------------------------------------
+  const renderRulesModal = () => {
+    if (!showRules) return null;
+    return (
+      <div className="modal-overlay" onClick={() => setShowRules(false)}>
+        <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+          <button className="modal-close-btn" onClick={() => setShowRules(false)}>✕</button>
+
+          <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "8px" }}>
+            <span className="event-badge">Rules & Guidelines</span>
+          </div>
+          <h2 style={{ fontSize: "22px", fontWeight: 800, marginBottom: "8px" }}>
+            How Virtual Secret Santa Works 🎁
+          </h2>
+          <p style={{ color: "var(--text-muted)", fontSize: "14px", marginBottom: "20px" }}>
+            No shopping, no delivery, zero money spent! This is a fast, fun live pitching game for the whole team.
+          </p>
+
+          <div className="rules-card-item">
+            <div className="rules-icon-badge">🤫</div>
+            <div>
+              <div style={{ fontWeight: 700, fontSize: "14px", color: "var(--text-main)" }}>
+                1. 100% Confidential Draw
+              </div>
+              <div style={{ fontSize: "13px", color: "var(--text-muted)" }}>
+                Once drawn, only you see your giftee on your screen. Do not leak or hint who you got until your turn!
+              </div>
+            </div>
+          </div>
+
+          <div className="rules-card-item">
+            <div className="rules-icon-badge">⏱</div>
+            <div>
+              <div style={{ fontWeight: 700, fontSize: "14px", color: "var(--text-main)" }}>
+                2. The 90-Second Live Pitch
+              </div>
+              <div style={{ fontSize: "13px", color: "var(--text-muted)" }}>
+                When your giftee appears on the stage, pitch your imaginary gift like a TV commercial or Shark Tank presentation. Explain why it fits them perfectly or hilariously!
+              </div>
+            </div>
+          </div>
+
+          <div className="rules-card-item">
+            <div className="rules-icon-badge">🕵️‍♂️</div>
+            <div>
+              <div style={{ fontWeight: 700, fontSize: "14px", color: "var(--text-main)" }}>
+                3. The Receiver Takes a Guess
+              </div>
+              <div style={{ fontSize: "13px", color: "var(--text-muted)" }}>
+                After hearing the pitch, the receiver gets one chance on the call to guess: <em>"Who gave me this?"</em> before the organizer reveals the secret giver.
+              </div>
+            </div>
+          </div>
+
+          <div className="rules-card-item">
+            <div className="rules-icon-badge">🏆</div>
+            <div>
+              <div style={{ fontWeight: 700, fontSize: "14px", color: "var(--text-main)" }}>
+                4. Vote for Awards
+              </div>
+              <div style={{ fontSize: "13px", color: "var(--text-muted)" }}>
+                Once all pitches conclude, everyone casts their votes for <strong>Most Thoughtful</strong>, <strong>Most Ridiculous</strong>, and <strong>Best Pitch</strong>!
+              </div>
+            </div>
+          </div>
+
+          <div style={{ marginTop: "20px", textAlign: "center" }}>
+            <button className="btn btn-black btn-md" onClick={() => setShowRules(false)} style={{ width: "100%" }}>
+              Got It, Let's Play!
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   // ---------------------------------------------------------------------------
   // 1. Unauthenticated View (Login)
   // ---------------------------------------------------------------------------
   if (!auth) {
     return (
       <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}>
+        {renderRulesModal()}
+        {toastMsg && <div className="toast-bar">{toastMsg}</div>}
+
         <header className="app-header">
           <div className="header-container">
             <div className="logo-badge-wrap">
               <ScansLogo />
               <span className="event-badge">Fun Friday</span>
+            </div>
+            <div className="header-actions">
+              <button className="header-btn" onClick={() => setShowRules(true)}>
+                📖 Rules
+              </button>
+              <button className="header-btn" onClick={copyGameLink}>
+                📋 Copy Link
+              </button>
             </div>
           </div>
         </header>
@@ -178,6 +300,9 @@ export default function Home() {
 
   return (
     <div>
+      {renderRulesModal()}
+      {toastMsg && <div className="toast-bar">{toastMsg}</div>}
+
       {/* Sleek Top Navbar */}
       <header className="app-header">
         <div className="header-container">
@@ -185,11 +310,22 @@ export default function Home() {
             <ScansLogo />
             <span className="event-badge">Secret Santa</span>
           </div>
-          <div className="header-user">
+
+          <div className="header-actions">
+            <button className="header-btn" onClick={() => setShowRules(true)}>
+              📖 Rules
+            </button>
+            <button className="header-btn" onClick={copyGameLink}>
+              📋 Copy Link
+            </button>
+
             <div className="user-pill">
               <span className="user-avatar-circle">{getInitials(me.name)}</span>
-              <span>{me.name}</span>
+              <span style={{ maxWidth: "120px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                {me.name}
+              </span>
             </div>
+
             <a
               href="#"
               className="signout-link"
@@ -208,7 +344,7 @@ export default function Home() {
         {/* Error Alert */}
         {errorMsg && <div className="alert-banner">⚠️ {errorMsg}</div>}
 
-        {/* Phase / Welcome Card */}
+        {/* Phase / Lobby Card with Join & Leave Options */}
         {!drawn && (
           <div className="card">
             <div className="card-header">
@@ -230,12 +366,27 @@ export default function Home() {
                 </button>
               </div>
             ) : (
-              <div style={{ background: "#F0FDF4", border: "1px solid #BBF7D0", borderRadius: "14px", padding: "16px", display: "flex", alignItems: "center", gap: "12px" }}>
-                <span style={{ fontSize: "24px" }}>🎉</span>
-                <div>
-                  <div style={{ fontWeight: 700, color: "#166534", fontSize: "15px" }}>You're in the game!</div>
-                  <div style={{ fontSize: "13px", color: "#15803D" }}>Waiting for the organizer to draw matches.</div>
+              <div style={{ background: "#F0FDF4", border: "1px solid #BBF7D0", borderRadius: "16px", padding: "16px", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "12px" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                  <span style={{ fontSize: "24px" }}>🎉</span>
+                  <div>
+                    <div style={{ fontWeight: 700, color: "#166534", fontSize: "15px" }}>You're in the game!</div>
+                    <div style={{ fontSize: "13px", color: "#15803D" }}>Waiting for the organizer to draw matches.</div>
+                  </div>
                 </div>
+
+                {/* Left/Join Option: Leave button */}
+                <button
+                  onClick={() => {
+                    if (confirm("Leave the lobby? You won't be included in the secret draw.")) {
+                      act("leave");
+                    }
+                  }}
+                  disabled={isActing}
+                  className="btn btn-danger-outline btn-sm"
+                >
+                  Leave Lobby
+                </button>
               </div>
             )}
           </div>
@@ -263,6 +414,25 @@ export default function Home() {
                   </div>
                   <div style={{ fontSize: "13px", color: "var(--text-muted)", marginTop: "6px" }}>
                     💡 Pitch a gift that fits them: inside joke, Monday problem solver, or ridiculous desk item!
+                  </div>
+
+                  {/* Pitch Idea Spark Generator */}
+                  <div className="idea-box" onClick={(e) => e.stopPropagation()}>
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "6px" }}>
+                      <span style={{ fontSize: "12px", fontWeight: 700, textTransform: "uppercase", color: "var(--brand-blue)", letterSpacing: "0.05em" }}>
+                        💡 Idea Prompt Spark
+                      </span>
+                      <button
+                        onClick={nextIdea}
+                        className="btn btn-outline btn-sm"
+                        style={{ padding: "4px 10px", fontSize: "11px" }}
+                      >
+                        🎲 Another Idea
+                      </button>
+                    </div>
+                    <p style={{ fontSize: "13px", color: "var(--text-main)", fontStyle: "italic", margin: 0 }}>
+                      "{IDEA_SPARKS[currentIdeaIndex]}"
+                    </p>
                   </div>
                 </div>
               ) : (
@@ -326,6 +496,16 @@ export default function Home() {
                       "Time's Up! ⏰"
                     )}
                   </div>
+                  {me.host && (
+                    <button
+                      onClick={() => act("addTime")}
+                      title="Add 30 seconds"
+                      className="btn btn-outline btn-sm"
+                      style={{ height: "36px" }}
+                    >
+                      +30s ⏱
+                    </button>
+                  )}
                 </div>
 
                 {/* Smooth Progress Bar */}

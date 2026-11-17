@@ -6,7 +6,7 @@ export const dynamic = "force-dynamic";
 
 const CATS = [
   "Useless but hilarious",
-  "Something for your desk",
+  "Something for their desk",
   "A gift for their 2030 self",
   "A gift from your home city",
   "Something they’d never buy themselves",
@@ -77,12 +77,15 @@ export async function POST(req) {
   const bad = (m) => Response.json({ error: m }, { status: 400 });
   const save = (patch) => r.set("fg:state", { ...st, ...patch });
 
-  const hostOnly = ["remove", "draw", "roll", "next", "reveal", "announce", "reset"];
+  const hostOnly = ["remove", "draw", "roll", "next", "reveal", "announce", "reset", "addTime"];
   if (hostOnly.includes(A) && !me.host) return Response.json({ error: "forbidden" }, { status: 403 });
 
   if (A === "join") {
     if (drawn) return bad("The draw already happened.");
     await r.hset("fg:players", { [me.id]: me.name });
+  } else if (A === "leave") {
+    if (drawn) return bad("The draw already happened.");
+    await r.hdel("fg:players", me.id);
   } else if (A === "remove") {
     if (drawn) return bad("Reset the draw first.");
     await r.hdel("fg:players", String(b.id));
@@ -104,6 +107,10 @@ export async function POST(req) {
   } else if (A === "next") {
     if (!drawn) return bad("Draw first.");
     await save({ idx: Math.min((st.idx ?? -1) + 1, st.order.length), revealed: false, giver: "", startedAt: Date.now() });
+  } else if (A === "addTime") {
+    if (!drawn || !st.startedAt) return bad("No active pitch.");
+    // Add 30 seconds to the timer
+    await save({ startedAt: (st.startedAt || Date.now()) + 30000 });
   } else if (A === "reveal") {
     const recv = st.order?.[st.idx];
     if (!drawn || !recv) return bad("No active pitch.");
