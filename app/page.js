@@ -45,7 +45,7 @@ export default function Home() {
     return (
       <main>
         <h1>🎁 Virtual Secret Santa</h1>
-        <p className="mut">Sign in with your company Google account to play.</p>
+        <p className="mut">Sign in with your Google account to play.</p>
         <button onClick={() => signIn("google")}>Sign in with Google</button>
       </main>
     );
