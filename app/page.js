@@ -1,6 +1,7 @@
 "use client";
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { signIn, signOut } from "next-auth/react";
+import { sounds, triggerGiftRain } from "@/lib/effects";
 
 const PITCH_DURATION = 90;
 
@@ -43,6 +44,7 @@ export default function Home() {
   const [now, setNow] = useState(Date.now());
   const [showGiftee, setShowGiftee] = useState(false);
   const [showRules, setShowRules] = useState(false);
+  const [isMuted, setIsMuted] = useState(false);
   const [currentIdeaIndex, setCurrentIdeaIndex] = useState(0);
   const [giftTitle, setGiftTitle] = useState("");
   const [giftPitch, setGiftPitch] = useState("");
@@ -51,6 +53,20 @@ export default function Home() {
   const [errorMsg, setErrorMsg] = useState("");
   const [toastMsg, setToastMsg] = useState("");
   const [isActing, setIsActing] = useState(false);
+
+  // Refs to track state transitions across polling
+  const prevRevealedRef = useRef(false);
+  const prevResultsRef = useRef(null);
+  const prevIdxRef = useRef(-1);
+
+  const toggleSound = () => {
+    const nextMuted = !isMuted;
+    setIsMuted(nextMuted);
+    sounds.muted = nextMuted;
+    if (!nextMuted) {
+      sounds.pop();
+    }
+  };
 
   const showToast = (msg) => {
     setToastMsg(msg);
@@ -61,6 +77,7 @@ export default function Home() {
     if (typeof window !== "undefined") {
       navigator.clipboard.writeText(window.location.origin);
       showToast("Link copied to clipboard! Share it on Slack or Teams 🚀");
+      sounds.pop();
     }
   };
 
@@ -74,6 +91,27 @@ export default function Home() {
       const j = await r.json();
       setAuth(true);
       setSkew(j.now - Date.now());
+
+      // Check if Giver was just revealed -> Trigger synced celebration on everyone's screen!
+      if (j.revealed && !prevRevealedRef.current) {
+        triggerGiftRain();
+        sounds.fanfare();
+      }
+      prevRevealedRef.current = !!j.revealed;
+
+      // Check if Winners were just announced
+      if (j.results && !prevResultsRef.current) {
+        triggerGiftRain();
+        sounds.fanfare();
+      }
+      prevResultsRef.current = j.results;
+
+      // Check if stage advanced to new pitch
+      if (j.idx !== prevIdxRef.current && j.idx >= 0) {
+        sounds.pop();
+      }
+      prevIdxRef.current = j.idx;
+
       setD(j);
 
       // Pre-fill my gift if already saved and user hasn't edited locally
@@ -99,6 +137,9 @@ export default function Home() {
   const act = async (action, extra = {}) => {
     setErrorMsg("");
     setIsActing(true);
+    if (action === "roll" || action === "pick_reader") {
+      sounds.roulette();
+    }
     try {
       const r = await fetch("/api/state", {
         method: "POST",
@@ -123,6 +164,7 @@ export default function Home() {
       setErrorMsg("Please enter a gift title!");
       return;
     }
+    sounds.pop();
     await act("submit_gift", { title: giftTitle, pitch: giftPitch });
     setGiftSavedMsg("✅ Anonymous pitch saved! It will appear on screen during their turn.");
     setTimeout(() => setGiftSavedMsg(""), 4000);
@@ -130,7 +172,16 @@ export default function Home() {
 
   const nextIdea = (e) => {
     e.stopPropagation();
+    sounds.pop();
     setCurrentIdeaIndex((prev) => (prev + 1) % IDEA_SPARKS.length);
+  };
+
+  const handleRevealGifteeToggle = () => {
+    if (!showGiftee) {
+      sounds.fanfare();
+      triggerGiftRain();
+    }
+    setShowGiftee(!showGiftee);
   };
 
   // ---------------------------------------------------------------------------
@@ -345,9 +396,19 @@ export default function Home() {
           </div>
 
           <div className="header-actions">
+            {/* Sound Mute/Unmute Toggle */}
+            <button
+              className="header-btn"
+              onClick={toggleSound}
+              title={isMuted ? "Unmute Sound FX" : "Mute Sound FX"}
+            >
+              {isMuted ? "🔇 Muted" : "🔊 Sound ON"}
+            </button>
+
             <button className="header-btn" onClick={() => setShowRules(true)}>
               📖 Rules
             </button>
+
             <button className="header-btn" onClick={copyGameLink}>
               📋 Copy Link
             </button>
@@ -391,7 +452,10 @@ export default function Home() {
                   Join the room as <strong>{me.name}</strong> to be included in the secret draw.
                 </p>
                 <button
-                  onClick={() => act("join")}
+                  onClick={() => {
+                    sounds.pop();
+                    act("join");
+                  }}
                   disabled={isActing}
                   className="btn btn-black btn-lg"
                 >
@@ -434,7 +498,7 @@ export default function Home() {
 
             <div
               className="secret-reveal-box"
-              onClick={() => setShowGiftee(!showGiftee)}
+              onClick={handleRevealGifteeToggle}
             >
               {showGiftee ? (
                 <div>
@@ -707,7 +771,10 @@ export default function Home() {
                   At least <strong>3 players</strong> are needed. Once all colleagues are in the lobby, click below to draw.
                 </p>
                 <button
-                  onClick={() => act("draw")}
+                  onClick={() => {
+                    sounds.fanfare();
+                    act("draw");
+                  }}
                   disabled={d.players.length < 3 || isActing}
                   className="btn btn-gradient btn-lg"
                   style={{ width: "100%" }}
@@ -742,7 +809,11 @@ export default function Home() {
                 </button>
 
                 <button
-                  onClick={() => act("reveal")}
+                  onClick={() => {
+                    sounds.fanfare();
+                    triggerGiftRain();
+                    act("reveal");
+                  }}
                   disabled={idx < 0 || idx >= totalPitches || d.revealed || isActing}
                   className="btn btn-gradient"
                 >
@@ -750,7 +821,11 @@ export default function Home() {
                 </button>
 
                 <button
-                  onClick={() => act("announce")}
+                  onClick={() => {
+                    sounds.fanfare();
+                    triggerGiftRain();
+                    act("announce");
+                  }}
                   disabled={isActing}
                   className="btn btn-outline"
                 >
@@ -848,13 +923,14 @@ export default function Home() {
             </div>
 
             <button
-              onClick={() =>
+              onClick={() => {
+                sounds.fanfare();
                 act("vote", {
                   a: getSelectedVote("a"),
                   b: getSelectedVote("b"),
                   c: getSelectedVote("c"),
-                })
-              }
+                });
+              }}
               disabled={isActing}
               className="btn btn-black btn-lg"
               style={{ width: "100%", marginTop: "14px" }}
