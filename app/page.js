@@ -150,14 +150,14 @@ export default function Home() {
             How Virtual Secret Santa Works 🎁
           </h2>
           <p style={{ color: "var(--text-muted)", fontSize: "14px", marginBottom: "20px" }}>
-            No shopping, ₹0 budget! Type an anonymous gift pitch in the app, and see if the receiver can guess who wrote it.
+            ₹0 budget, maximum banter! You type your anonymous gift pitch, and a <strong>random colleague</strong> is chosen on the spot to pitch it live on call!
           </p>
 
           <div className="rules-card-item">
             <div className="rules-icon-badge">🤫</div>
             <div>
               <div style={{ fontWeight: 700, fontSize: "14px", color: "var(--text-main)" }}>
-                1. 100% Confidential Draw
+                1. 100% Confidential Match
               </div>
               <div style={{ fontSize: "13px", color: "var(--text-muted)" }}>
                 Once drawn, only you see your giftee on your screen. Do not tell anyone who you got!
@@ -169,10 +169,22 @@ export default function Home() {
             <div className="rules-icon-badge">📝</div>
             <div>
               <div style={{ fontWeight: 700, fontSize: "14px", color: "var(--text-main)" }}>
-                2. Type Your Anonymous Pitch (No Voice Giveaway!)
+                2. Type Your Anonymous Gift Pitch
               </div>
               <div style={{ fontSize: "13px", color: "var(--text-muted)" }}>
-                Type your funny gift idea and pitch note directly into the app. When their turn arrives, your note appears anonymously on screen—voice recognition won't spoil the mystery!
+                Type your funny gift idea and why they need it into the app. It stays completely anonymous.
+              </div>
+            </div>
+          </div>
+
+          <div className="rules-card-item">
+            <div className="rules-icon-badge">🎤</div>
+            <div>
+              <div style={{ fontWeight: 700, fontSize: "14px", color: "var(--text-main)" }}>
+                3. The Random Presenter Twist!
+              </div>
+              <div style={{ fontSize: "13px", color: "var(--text-muted)" }}>
+                When a pitch begins, the app randomly selects a colleague (the Bakra!) to turn on their mic and dramatically pitch the gift note like a TV salesperson!
               </div>
             </div>
           </div>
@@ -181,10 +193,10 @@ export default function Home() {
             <div className="rules-icon-badge">🕵️‍♂️</div>
             <div>
               <div style={{ fontWeight: 700, fontSize: "14px", color: "var(--text-main)" }}>
-                3. The Receiver Reads & Guesses
+                4. Receiver Guesses & Reveal
               </div>
               <div style={{ fontSize: "13px", color: "var(--text-muted)" }}>
-                The receiver reads their mystery pitch note aloud on call and guesses: <em>"Who in the team wrote this for me?"</em> before the organizer reveals the giver!
+                Since the presenter didn't write it, the receiver has to guess: <em>"Who in the team secretly came up with this?"</em> before the organizer reveals the real giver!
               </div>
             </div>
           </div>
@@ -193,10 +205,10 @@ export default function Home() {
             <div className="rules-icon-badge">🏆</div>
             <div>
               <div style={{ fontWeight: 700, fontSize: "14px", color: "var(--text-main)" }}>
-                4. Vote for Awards
+                5. Vote for Awards
               </div>
               <div style={{ fontSize: "13px", color: "var(--text-muted)" }}>
-                After all pitches, everyone votes for <strong>Most Thoughtful</strong>, <strong>Most Ridiculous</strong>, and <strong>Best Pitch</strong>!
+                Vote for <strong>Most Thoughtful</strong>, <strong>Most Ridiculous</strong>, and <strong>Best Pitch</strong>!
               </div>
             </div>
           </div>
@@ -244,7 +256,7 @@ export default function Home() {
             </div>
             <h1 className="hero-title">Virtual Secret Santa</h1>
             <p className="hero-subtitle">
-              Anonymous gift pitches on screen, zero prep, 90 seconds on the clock, and hilarious reveals.
+              Anonymous gift pitches, random live presenters, zero prep, and hilarious reveals.
             </p>
 
             <button
@@ -274,8 +286,8 @@ export default function Home() {
               </div>
               <div className="step-card">
                 <div className="step-number">Step 03</div>
-                <div className="step-title">Guess & Reveal</div>
-                <div className="step-desc">Text appears on screen, receiver guesses who wrote it!</div>
+                <div className="step-title">Random Presenter</div>
+                <div className="step-desc">Random colleague pitches it live, receiver guesses the real giver!</div>
               </div>
             </div>
           </div>
@@ -301,13 +313,14 @@ export default function Home() {
   // ---------------------------------------------------------------------------
   // 3. Authenticated Game View
   // ---------------------------------------------------------------------------
-  const { me, phase, order, idx, category, startedAt, results, myMatch, myVotes, votesIn, activeGift } = d;
+  const { me, phase, order, idx, category, startedAt, results, myMatch, myVotes, votesIn, activeGift, readerId } = d;
   const drawn = phase === "drawn";
   const nameOf = (id) => d.players.find((p) => p.id === id)?.name || "Colleague";
   const currentReceiverId = order[idx];
   const totalPitches = order.length;
   const isPitching = idx >= 0 && idx < totalPitches;
   const isPitchFinished = idx >= totalPitches && totalPitches > 0;
+  const isCurrentUserReader = readerId && readerId === me.id;
 
   // Timer math
   const elapsedSeconds = (now + skew - startedAt) / 1000;
@@ -432,7 +445,7 @@ export default function Home() {
                     {nameOf(myMatch)}
                   </div>
                   <div style={{ fontSize: "13px", color: "var(--text-muted)", marginTop: "4px", marginBottom: "16px" }}>
-                    💡 Type your gift idea below. It will appear on screen <strong>completely anonymously</strong> so nobody recognizes your voice!
+                    💡 Type your gift idea below. A <strong>randomly selected colleague</strong> will pitch it aloud on call to keep full suspense!
                   </div>
 
                   {/* Anonymous Gift Submission Form */}
@@ -455,7 +468,7 @@ export default function Home() {
 
                     <div style={{ marginBottom: "12px" }}>
                       <label style={{ display: "block", fontSize: "12px", fontWeight: 700, textTransform: "uppercase", color: "var(--text-muted)", marginBottom: "4px" }}>
-                        Why they need it (Anonymous Pitch Note)
+                        Why they need it (Pitch Note for the Reader)
                       </label>
                       <textarea
                         className="text-input"
@@ -557,6 +570,37 @@ export default function Home() {
                   </div>
                 )}
 
+                {/* Randomly Selected Live Presenter / Reader Card */}
+                {readerId && (
+                  <div className={`reader-spotlight-box ${isCurrentUserReader ? "is-me" : ""}`}>
+                    <div style={{ textAlign: "left" }}>
+                      <div className="reader-meta-title">
+                        {isCurrentUserReader ? "🔥 YOU ARE ON THE MIC!" : "🎙️ CHOSEN LIVE PRESENTER"}
+                      </div>
+                      <div className="reader-name-bold">
+                        {nameOf(readerId)} {isCurrentUserReader ? "(YOU)" : ""}
+                      </div>
+                      <div style={{ fontSize: "12px", color: "var(--text-muted)", marginTop: "2px" }}>
+                        {isCurrentUserReader
+                          ? "Turn on your mic and dramatically pitch the gift note below!"
+                          : `${nameOf(readerId)}, turn on your mic and dramatically sell this gift!`}
+                      </div>
+                    </div>
+
+                    {me.host && (
+                      <button
+                        onClick={() => act("pick_reader")}
+                        disabled={isActing}
+                        title="Pick another random colleague"
+                        className="btn btn-outline btn-sm"
+                        style={{ background: "#FFFFFF", marginLeft: "auto" }}
+                      >
+                        🎲 Reroll Presenter
+                      </button>
+                    )}
+                  </div>
+                )}
+
                 {/* Digital Countdown Timer */}
                 <div className="timer-container">
                   <div className={`timer-digits ${timeLeft <= 15 && timeLeft > 0 ? "urgent" : ""}`}>
@@ -605,7 +649,7 @@ export default function Home() {
                       </div>
                     )}
                     <div style={{ fontSize: "12px", color: "var(--text-muted)", marginTop: "10px", fontWeight: 600 }}>
-                      👉 <strong>{nameOf(currentReceiverId)}</strong>, read this aloud! Who in the team wrote this for you? Take your guess on call!
+                      👉 <strong>{nameOf(readerId || currentReceiverId)}</strong>, read this aloud! <strong>{nameOf(currentReceiverId)}</strong>, guess who in the team came up with this!
                     </div>
                   </div>
                 ) : (
@@ -620,7 +664,7 @@ export default function Home() {
                     <span style={{ fontSize: "20px" }}>🕵️‍♂️</span>
                     <div style={{ textAlign: "left" }}>
                       <div style={{ fontSize: "12px", color: "var(--text-muted)", textTransform: "uppercase", fontWeight: 700 }}>
-                        Giver Identity
+                        Real Giver Identity
                       </div>
                       {d.revealed ? (
                         <div className="giver-revealed-text">
@@ -687,6 +731,14 @@ export default function Home() {
                   className="btn btn-black"
                 >
                   {idx < 0 ? "▶ Start Pitches" : "▶ Next Pitch"}
+                </button>
+
+                <button
+                  onClick={() => act("pick_reader")}
+                  disabled={idx < 0 || idx >= totalPitches || isActing}
+                  className="btn btn-outline"
+                >
+                  🎲 Reroll Presenter
                 </button>
 
                 <button

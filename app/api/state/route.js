@@ -91,6 +91,7 @@ export async function GET() {
     idx: st.idx ?? -1,
     revealed: !!st.revealed,
     giver: st.revealed ? st.giver : "",
+    readerId: st.readerId || "",
     category: st.category || "",
     startedAt: st.startedAt || 0,
     results: st.results || null,
@@ -114,7 +115,7 @@ export async function POST(req) {
   const bad = (m) => Response.json({ error: m }, { status: 400 });
   const save = (patch) => r.set("fg:state", { ...st, ...patch });
 
-  const hostOnly = ["remove", "draw", "roll", "next", "reveal", "announce", "reset", "addTime"];
+  const hostOnly = ["remove", "draw", "roll", "next", "reveal", "announce", "reset", "addTime", "pick_reader"];
   if (hostOnly.includes(A) && !me.host) return Response.json({ error: "forbidden" }, { status: 403 });
 
   if (A === "join") {
@@ -143,14 +144,34 @@ export async function POST(req) {
     await r.hset("fg:matches", m);
     await r.set("fg:state", {
       phase: "drawn", order: shuf(s), idx: -1, revealed: false,
-      giver: "", category: "", startedAt: 0, results: null,
+      giver: "", readerId: "", category: "", startedAt: 0, results: null,
     });
   } else if (A === "roll") {
     if (!drawn) return bad("Draw first.");
     await save({ category: CATS[Math.floor(Math.random() * CATS.length)] });
   } else if (A === "next") {
     if (!drawn) return bad("Draw first.");
-    await save({ idx: Math.min((st.idx ?? -1) + 1, st.order.length), revealed: false, giver: "", startedAt: Date.now() });
+    const nextIdx = Math.min((st.idx ?? -1) + 1, st.order.length);
+    const recv = st.order?.[nextIdx];
+    // Pick a random colleague to present/read the pitch aloud (anyone except the receiver)
+    const playerIds = Object.keys(players);
+    const eligibleReaders = playerIds.filter((id) => id !== recv);
+    const readerId = eligibleReaders.length > 0 ? eligibleReaders[Math.floor(Math.random() * eligibleReaders.length)] : "";
+    await save({
+      idx: nextIdx,
+      revealed: false,
+      giver: "",
+      readerId: readerId || "",
+      startedAt: Date.now(),
+    });
+  } else if (A === "pick_reader") {
+    const recv = st.order?.[st.idx];
+    if (!drawn || !recv) return bad("No active pitch.");
+    const playerIds = Object.keys(players);
+    const eligibleReaders = playerIds.filter((id) => id !== recv && id !== st.readerId);
+    const pool = eligibleReaders.length > 0 ? eligibleReaders : playerIds.filter((id) => id !== recv);
+    const readerId = pool.length > 0 ? pool[Math.floor(Math.random() * pool.length)] : "";
+    await save({ readerId });
   } else if (A === "addTime") {
     if (!drawn || !st.startedAt) return bad("No active pitch.");
     await save({ startedAt: (st.startedAt || Date.now()) + 30000 });
