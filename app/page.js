@@ -582,42 +582,55 @@ export default function Home() {
         {/* Grand Shop Inauguration & Ribbon Cutting Ceremony */}
         {(!d.inaugurated || isUnveiling) && (
           <div className={`inauguration-stage ${isUnveiling ? "curtains-open" : ""}`}>
-            {/* Royal Velvet Curtains */}
-            <div className="curtain-overlay-left" />
-            <div className="curtain-overlay-right" />
+            {/* Draped Royal Velvet Curtains on Left & Right */}
+            <div className="curtain-drape-left" />
+            <div className="curtain-drape-right" />
 
-            {/* Ceremonial Red & Gold Ribbon with Golden Bow */}
-            <div className={`ceremonial-ribbon-bar ${isUnveiling ? "is-cut" : ""}`}>
-              <div className="ceremonial-bow-center">🎀</div>
+            {/* Prominent Ceremonial Red & Gold Ribbon with Golden Bow */}
+            <div className="ceremonial-ribbon-wrapper">
+              <div className={`ribbon-strap ${isUnveiling ? "is-cut" : ""}`}>
+                <div className="ribbon-golden-bow">🎀</div>
+              </div>
+
+              {/* Chief Guest Ribbon Cut Action (Tied directly to the ribbon) */}
+              <div className="chief-guest-panel">
+                {me.host ? (
+                  <div>
+                    <div style={{ fontSize: "12px", fontWeight: 800, color: "#FDE68A", letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: "10px" }}>
+                      👑 ORGANIZER (CHIEF GUEST) ACTION
+                    </div>
+                    <button
+                      onClick={handleCutRibbon}
+                      disabled={isActing || isUnveiling}
+                      className="btn-scissors-cut"
+                    >
+                      ✂️ Cut the Ribbon &amp; Inaugurate (फीता काटें!)
+                    </button>
+                    <div style={{ fontSize: "12px", color: "#FDE68A", opacity: 0.85, marginTop: "8px" }}>
+                      Clicking will snip the ribbon, play royal Shehnai fanfare &amp; shower flowers for the entire team!
+                    </div>
+                  </div>
+                ) : (
+                  <div style={{ display: "inline-flex", alignItems: "center", gap: "8px", background: "rgba(245, 158, 11, 0.15)", border: "1px solid rgba(245, 158, 11, 0.4)", padding: "10px 20px", borderRadius: "9999px", color: "#FDE68A", fontSize: "14px", fontWeight: 700 }}>
+                    <span>⏳</span>
+                    <span>Awaiting Chief Guest (Organizer) to cut the ceremonial ribbon... Dil thaam ke baithiye! 🪑</span>
+                  </div>
+                )}
+              </div>
             </div>
 
-            {/* Center Content Card */}
-            <div className="inauguration-card-body">
-              <div style={{ display: "inline-flex", alignItems: "center", gap: "8px", marginBottom: "8px" }}>
-                <span
-                  style={{
-                    background: "rgba(245, 158, 11, 0.2)",
-                    border: "1px solid rgba(245, 158, 11, 0.5)",
-                    color: "#FDE68A",
-                    padding: "4px 12px",
-                    borderRadius: "9999px",
-                    fontSize: "12px",
-                    fontWeight: 700,
-                    letterSpacing: "0.06em",
-                    textTransform: "uppercase",
-                  }}
-                >
-                  🎉 GRAND OPENING • भव्य उद्घाटन
-                </span>
+            {/* Inner Content Card (Interactive Banner, Flower shower & VIP check-in) */}
+            <div className="stage-inner-card">
+              <div className="inauguration-badge">
+                <span>🎉</span> GRAND OPENING • भव्य उद्घाटन
               </div>
 
               <h1 className="inauguration-title">
                 Secret Santa 2024 ki Grand Opening 🛍️
               </h1>
 
-              <p className="inauguration-tagline">
-                दुकान का फीता कटने की प्रतीक्षा हो रही है! (Awaiting Chief Guest Ribbon Cutting).
-                <br />
+              <p className="inauguration-desc">
+                दुकान का फीता कटने की प्रतीक्षा हो रही है! (Awaiting Ribbon Cutting Ceremony).<br />
                 Meanwhile, shower flowers, give your blessings &amp; claim your VIP Pass!
               </p>
 
@@ -631,7 +644,7 @@ export default function Home() {
                   🌸 Shower Flowers (पुष्प वर्षा करें) ✨
                 </button>
                 <div>
-                  <div className="flower-live-counter">
+                  <div className="flower-live-pill">
                     <span>🌸</span>
                     <span>{d.flowerCount || 0} Flowers Showered by Scans.ai Team</span>
                   </div>
@@ -674,40 +687,6 @@ export default function Home() {
                     }}
                   >
                     ✅ VIP Pass Confirmed! You are in the room.
-                  </div>
-                )}
-              </div>
-
-              {/* Chief Guest / Host Ribbon Cut Action */}
-              <div style={{ marginTop: "24px", paddingTop: "20px", borderTop: "1px dashed rgba(245, 158, 11, 0.3)" }}>
-                {me.host ? (
-                  <div>
-                    <div
-                      style={{
-                        fontSize: "12px",
-                        color: "#FDE68A",
-                        fontWeight: 800,
-                        textTransform: "uppercase",
-                        letterSpacing: "0.08em",
-                        marginBottom: "10px",
-                      }}
-                    >
-                      👑 CHIEF GUEST ACTION
-                    </div>
-                    <button
-                      onClick={handleCutRibbon}
-                      disabled={isActing || isUnveiling}
-                      className="btn-scissors-inaugurate"
-                    >
-                      ✂️ Cut Ribbon &amp; Inaugurate (फीता काटें!)
-                    </button>
-                    <div style={{ fontSize: "12px", color: "#FDE68A", marginTop: "8px", opacity: 0.8 }}>
-                      Clicking will snip the ribbon, open curtains with Shehnai fanfare &amp; unveil the game to everyone!
-                    </div>
-                  </div>
-                ) : (
-                  <div style={{ color: "#FDE68A", fontSize: "13px", fontStyle: "italic" }}>
-                    ⏳ Chief Guest (Organizer) will cut the ceremonial ribbon shortly... Dil thaam ke baithiye! 🪑
                   </div>
                 )}
               </div>
