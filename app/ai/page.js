@@ -1,6 +1,7 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
+import { sounds, triggerGiftRain } from "@/lib/effects";
 
 function ScansLogo() {
   return (
@@ -17,6 +18,68 @@ function ScansLogo() {
 export default function AIShowcasePage() {
   const [activeTab, setActiveTab] = useState("quick"); // "quick" | "deep"
   const [deepSection, setDeepSection] = useState("secret-santa"); // "secret-santa" | "carscan" | "maturity" | "playbook"
+  const [claimedBadge, setClaimedBadge] = useState(false);
+  const [claiming, setClaiming] = useState(false);
+  const [comparisonMode, setComparisonMode] = useState("himanshu"); // "traditional" | "himanshu"
+  const [reactions, setReactions] = useState({ blown: 42, speed: 38, banter: 56, op: 64 });
+  const [userReacted, setUserReacted] = useState({});
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      if (localStorage.getItem("ai_insider") === "true") {
+        setClaimedBadge(true);
+      }
+    }
+    // Fetch live reactions from Redis
+    fetch("/api/reactions")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data?.counts) setReactions(data.counts);
+      })
+      .catch(() => {});
+  }, []);
+
+  const handleClaimBadge = async () => {
+    if (claiming) return;
+    setClaiming(true);
+    try {
+      sounds.fanfare();
+      triggerGiftRain();
+      if (typeof window !== "undefined") {
+        localStorage.setItem("ai_insider", "true");
+      }
+      setClaimedBadge(true);
+      // Persist in Redis
+      await Promise.allSettled([
+        fetch("/api/reactions", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action: "claim_badge" }),
+        }),
+        fetch("/api/state", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action: "claim_insider" }),
+        }),
+      ]);
+    } catch {}
+    setClaiming(false);
+  };
+
+  const handleReaction = async (type) => {
+    if (userReacted[type]) return;
+    sounds.pop();
+    setUserReacted((prev) => ({ ...prev, [type]: true }));
+    setReactions((prev) => ({ ...prev, [type]: (prev[type] || 0) + 1 }));
+
+    try {
+      await fetch("/api/reactions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ type }),
+      });
+    } catch {}
+  };
 
   return (
     <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", background: "var(--bg-color)" }}>
@@ -250,6 +313,121 @@ export default function AIShowcasePage() {
               </div>
             </div>
 
+            {/* INTERACTIVE FEATURE 1: Web Audio Synth Playground */}
+            <div
+              className="card"
+              style={{
+                padding: "28px 24px",
+                marginBottom: "36px",
+                border: "2px solid rgba(72,113,197,0.25)",
+                background: "linear-gradient(135deg, rgba(72,113,197,0.06) 0%, rgba(188,0,112,0.04) 100%, #ffffff 100%)",
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "12px", marginBottom: "16px" }}>
+                <div>
+                  <span className="event-badge" style={{ marginBottom: "6px", display: "inline-block" }}>
+                    🎛️ Interactive Lab
+                  </span>
+                  <h3 style={{ fontSize: "20px", fontWeight: 800, color: "var(--text-main)" }}>
+                    The Browser Audio Synth Lab (Zero MP3 Files)
+                  </h3>
+                  <p style={{ fontSize: "13px", color: "var(--text-muted)", marginTop: "2px" }}>
+                    Click below to test the sound effects synthesized live in this browser with Web Audio oscillators:
+                  </p>
+                </div>
+              </div>
+
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+                  gap: "12px",
+                  marginBottom: "16px",
+                }}
+              >
+                <button
+                  onClick={() => sounds.fanfare()}
+                  className="btn header-btn"
+                  style={{
+                    padding: "12px",
+                    borderRadius: "10px",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: "8px",
+                    fontWeight: 700,
+                    fontSize: "13px",
+                    background: "#fff",
+                    border: "1px solid var(--card-border)",
+                  }}
+                >
+                  🎺 Play Fanfare
+                </button>
+
+                <button
+                  onClick={() => sounds.roulette()}
+                  className="btn header-btn"
+                  style={{
+                    padding: "12px",
+                    borderRadius: "10px",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: "8px",
+                    fontWeight: 700,
+                    fontSize: "13px",
+                    background: "#fff",
+                    border: "1px solid var(--card-border)",
+                  }}
+                >
+                  🥁 Bakra Roulette Roll
+                </button>
+
+                <button
+                  onClick={() => sounds.pop()}
+                  className="btn header-btn"
+                  style={{
+                    padding: "12px",
+                    borderRadius: "10px",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: "8px",
+                    fontWeight: 700,
+                    fontSize: "13px",
+                    background: "#fff",
+                    border: "1px solid var(--card-border)",
+                  }}
+                >
+                  🔔 Soft Reveal Pop
+                </button>
+
+                <button
+                  onClick={() => {
+                    sounds.fanfare();
+                    triggerGiftRain();
+                  }}
+                  className="btn btn-black"
+                  style={{
+                    padding: "12px",
+                    borderRadius: "10px",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: "8px",
+                    fontWeight: 700,
+                    fontSize: "13px",
+                  }}
+                >
+                  🎁 Fire Gift Confetti
+                </button>
+              </div>
+
+              <div style={{ fontSize: "12px", color: "var(--text-muted)", background: "rgba(255,255,255,0.7)", padding: "10px 14px", borderRadius: "8px" }}>
+                💡 <strong>Why we built it with math:</strong> Audio files cause lag and playback stuttering on video calls. Himanshu prompted Antigravity to write pure Web Audio API oscillator synthesis—resulting in instant 0ms latency with zero bytes downloaded!
+              </div>
+            </div>
+
             {/* The 3 Superpowers */}
             <div style={{ marginBottom: "36px" }}>
               <div style={{ textAlign: "center", marginBottom: "24px" }}>
@@ -411,126 +589,84 @@ export default function AIShowcasePage() {
               </div>
             </div>
 
-            {/* The Live Evolution Log (From conversation fa958e09) */}
+            {/* INTERACTIVE FEATURE 2: Corporate Slog vs Himanshu Matrix */}
             <div className="card" style={{ padding: "32px 24px", marginBottom: "36px" }}>
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "20px" }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "12px", marginBottom: "20px" }}>
                 <div>
                   <h3 style={{ fontSize: "20px", fontWeight: 800, color: "var(--text-main)" }}>
-                    The Secret Santa Live Evolution
+                    The Velocity Reality Check
                   </h3>
                   <p style={{ fontSize: "13px", color: "var(--text-muted)", marginTop: "2px" }}>
-                    How this very game evolved from prompt to deployment on Nov 17.
+                    How projects typically happen vs. how Himanshu delivers with AI pairing.
                   </p>
                 </div>
-                <span className="event-badge" style={{ background: "var(--chip-bg)", color: "var(--text-main)" }}>
-                  fa958e09...
-                </span>
-              </div>
 
-              <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-                {/* Step 1 */}
-                <div style={{ display: "flex", gap: "16px", alignItems: "flex-start" }}>
-                  <div
+                <div style={{ display: "flex", background: "var(--chip-bg)", padding: "3px", borderRadius: "8px" }}>
+                  <button
+                    onClick={() => setComparisonMode("traditional")}
                     style={{
                       padding: "6px 12px",
-                      borderRadius: "8px",
-                      background: "var(--chip-bg)",
+                      borderRadius: "6px",
+                      border: "none",
                       fontSize: "12px",
-                      fontWeight: 700,
-                      color: "var(--brand-blue)",
-                      whiteSpace: "nowrap",
+                      fontWeight: 600,
+                      cursor: "pointer",
+                      background: comparisonMode === "traditional" ? "#fff" : "transparent",
+                      color: comparisonMode === "traditional" ? "var(--text-main)" : "var(--text-muted)",
+                      boxShadow: comparisonMode === "traditional" ? "0 2px 6px rgba(0,0,0,0.06)" : "none",
                     }}
                   >
-                    19:28
-                  </div>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontWeight: 700, fontSize: "14px", color: "var(--text-main)" }}>
-                      Initial Idea & Personal GitHub Setup
-                    </div>
-                    <div style={{ fontSize: "13px", color: "var(--text-muted)" }}>
-                      Himanshu initiated the project for Fun Friday. Antigravity routed git remotes and configured Vercel edge deployment.
-                    </div>
-                  </div>
-                </div>
-
-                {/* Step 2 */}
-                <div style={{ display: "flex", gap: "16px", alignItems: "flex-start" }}>
-                  <div
+                    🏢 The 3-Week Corporate Slog
+                  </button>
+                  <button
+                    onClick={() => setComparisonMode("himanshu")}
                     style={{
                       padding: "6px 12px",
-                      borderRadius: "8px",
-                      background: "var(--chip-bg)",
+                      borderRadius: "6px",
+                      border: "none",
                       fontSize: "12px",
-                      fontWeight: 700,
-                      color: "var(--brand-blue)",
-                      whiteSpace: "nowrap",
+                      fontWeight: 600,
+                      cursor: "pointer",
+                      background: comparisonMode === "himanshu" ? "var(--brand-gradient)" : "transparent",
+                      color: comparisonMode === "himanshu" ? "#fff" : "var(--text-muted)",
+                      boxShadow: comparisonMode === "himanshu" ? "0 2px 6px rgba(0,0,0,0.1)" : "none",
                     }}
                   >
-                    20:23
-                  </div>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontWeight: 700, fontSize: "14px", color: "var(--text-main)" }}>
-                      Scans.ai Brand Makeover
-                    </div>
-                    <div style={{ fontSize: "13px", color: "var(--text-muted)" }}>
-                      "Make UI same as scans.ai and branding also" ➔ Complete design overhaul with Scans gradient, Inter + Sora typography, and polished UI cards.
-                    </div>
-                  </div>
-                </div>
-
-                {/* Step 3 */}
-                <div style={{ display: "flex", gap: "16px", alignItems: "flex-start" }}>
-                  <div
-                    style={{
-                      padding: "6px 12px",
-                      borderRadius: "8px",
-                      background: "var(--chip-bg)",
-                      fontSize: "12px",
-                      fontWeight: 700,
-                      color: "var(--brand-pink)",
-                      whiteSpace: "nowrap",
-                    }}
-                  >
-                    20:42
-                  </div>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontWeight: 700, fontSize: "14px", color: "var(--text-main)" }}>
-                      The "Random Presenter" Twist (The Bakra Mechanic)
-                    </div>
-                    <div style={{ fontSize: "13px", color: "var(--text-muted)" }}>
-                      Himanshu’s brainstorm: <em>"Instead of the gift writer pitching, let's select a random colleague live on call to pitch it!"</em> Antigravity restructured state & added live presenter roulette in minutes.
-                    </div>
-                  </div>
-                </div>
-
-                {/* Step 4 */}
-                <div style={{ display: "flex", gap: "16px", alignItems: "flex-start" }}>
-                  <div
-                    style={{
-                      padding: "6px 12px",
-                      borderRadius: "8px",
-                      background: "var(--chip-bg)",
-                      fontSize: "12px",
-                      fontWeight: 700,
-                      color: "var(--success)",
-                      whiteSpace: "nowrap",
-                    }}
-                  >
-                    20:58
-                  </div>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontWeight: 700, fontSize: "14px", color: "var(--text-main)" }}>
-                      Festive Gift Rain & Web Audio Synth Sound FX
-                    </div>
-                    <div style={{ fontSize: "13px", color: "var(--text-muted)" }}>
-                      Synthesized fanfare, drumrolls, reveal sound chimes, and falling confetti animation injected directly into the browser.
-                    </div>
-                  </div>
+                    ⚡ Himanshu + Antigravity (1 Evening)
+                  </button>
                 </div>
               </div>
+
+              {comparisonMode === "traditional" ? (
+                <div style={{ background: "#FEF2F2", border: "1px solid #FECACA", borderRadius: "14px", padding: "20px" }}>
+                  <div style={{ fontWeight: 800, color: "#991B1B", fontSize: "15px", marginBottom: "12px" }}>
+                    The Old Way (Estimated Time: 3 to 4 Sprints)
+                  </div>
+                  <div style={{ display: "grid", gap: "10px", fontSize: "13px", color: "#7F1D1D" }}>
+                    <div>• <strong>Sprint Planning:</strong> 2 hours debating ticket points, story estimates, and scope.</div>
+                    <div>• <strong>Design Hand-off:</strong> Waiting 5 days for Figma mocks and icon exports.</div>
+                    <div>• <strong>Backend & Infrastructure:</strong> Setting up database migrations, auth middleware, and API routes manually.</div>
+                    <div>• <strong>PR & Code Review:</strong> 4 rounds of Greptile comments, lint failures, and nitpicks.</div>
+                    <div>• <strong>Deployment:</strong> "Blocked by staging freeze. Rescheduled for next release train." 💤</div>
+                  </div>
+                </div>
+              ) : (
+                <div style={{ background: "#F0FDF4", border: "1px solid #BBF7D0", borderRadius: "14px", padding: "20px" }}>
+                  <div style={{ fontWeight: 800, color: "#166534", fontSize: "15px", marginBottom: "12px" }}>
+                    The AI-Native Way (Delivered: Under 2 Hours)
+                  </div>
+                  <div style={{ display: "grid", gap: "10px", fontSize: "13px", color: "#14532D" }}>
+                    <div>• <strong>7:28 PM:</strong> Conceived idea, authenticated personal GitHub, and pushed initial skeleton.</div>
+                    <div>• <strong>8:23 PM:</strong> Automated design extraction matching scans.ai branding, tokens, and responsive layout.</div>
+                    <div>• <strong>8:42 PM:</strong> Invented & coded "Random Presenter Roulette" server state in minutes.</div>
+                    <div>• <strong>8:58 PM:</strong> Added Web Audio frequency oscillators & festive confetti.</div>
+                    <div>• <strong>9:00 PM:</strong> 100% deployed and live on Vercel with zero bugs. 🚀</div>
+                  </div>
+                </div>
+              )}
             </div>
 
-            {/* BRANDING SECTION 1: How I Improve Daily & The Compounding Flywheel */}
+            {/* BRANDING SECTION 1: How I Improve Daily */}
             <div
               className="card"
               style={{
@@ -690,6 +826,190 @@ export default function AIShowcasePage() {
                   Connect on GitHub ↗
                 </a>
               </div>
+            </div>
+
+            {/* INTERACTIVE FEATURE 3: Live Redis Reaction Counter */}
+            <div
+              className="card"
+              style={{
+                padding: "28px 24px",
+                marginBottom: "36px",
+                textAlign: "center",
+                border: "1px solid var(--card-border)",
+              }}
+            >
+              <h3 style={{ fontSize: "18px", fontWeight: 800, color: "var(--text-main)", marginBottom: "6px" }}>
+                Drop a Live Reaction for Fun Friday! 🎉
+              </h3>
+              <p style={{ fontSize: "13px", color: "var(--text-muted)", marginBottom: "20px" }}>
+                Tap an emoji below to add your live reaction (synced across the team via Upstash Redis):
+              </p>
+
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "center",
+                  flexWrap: "wrap",
+                  gap: "12px",
+                }}
+              >
+                <button
+                  onClick={() => handleReaction("blown")}
+                  disabled={userReacted.blown}
+                  className="btn"
+                  style={{
+                    padding: "10px 18px",
+                    borderRadius: "100px",
+                    border: userReacted.blown ? "2px solid var(--brand-blue)" : "1px solid var(--card-border)",
+                    background: userReacted.blown ? "rgba(72,113,197,0.1)" : "#fff",
+                    fontWeight: 700,
+                    fontSize: "14px",
+                    cursor: "pointer",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "8px",
+                  }}
+                >
+                  <span>🤯 Mind Blown</span>
+                  <span style={{ fontSize: "12px", color: "var(--text-muted)", background: "var(--chip-bg)", padding: "2px 8px", borderRadius: "10px" }}>
+                    {reactions.blown}
+                  </span>
+                </button>
+
+                <button
+                  onClick={() => handleReaction("speed")}
+                  disabled={userReacted.speed}
+                  className="btn"
+                  style={{
+                    padding: "10px 18px",
+                    borderRadius: "100px",
+                    border: userReacted.speed ? "2px solid var(--brand-pink)" : "1px solid var(--card-border)",
+                    background: userReacted.speed ? "rgba(188,0,112,0.1)" : "#fff",
+                    fontWeight: 700,
+                    fontSize: "14px",
+                    cursor: "pointer",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "8px",
+                  }}
+                >
+                  <span>🚀 10x Speed</span>
+                  <span style={{ fontSize: "12px", color: "var(--text-muted)", background: "var(--chip-bg)", padding: "2px 8px", borderRadius: "10px" }}>
+                    {reactions.speed}
+                  </span>
+                </button>
+
+                <button
+                  onClick={() => handleReaction("banter")}
+                  disabled={userReacted.banter}
+                  className="btn"
+                  style={{
+                    padding: "10px 18px",
+                    borderRadius: "100px",
+                    border: userReacted.banter ? "2px solid var(--warning)" : "1px solid var(--card-border)",
+                    background: userReacted.banter ? "rgba(245,158,11,0.1)" : "#fff",
+                    fontWeight: 700,
+                    fontSize: "14px",
+                    cursor: "pointer",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "8px",
+                  }}
+                >
+                  <span>🔥 Pure Banter</span>
+                  <span style={{ fontSize: "12px", color: "var(--text-muted)", background: "var(--chip-bg)", padding: "2px 8px", borderRadius: "10px" }}>
+                    {reactions.banter}
+                  </span>
+                </button>
+
+                <button
+                  onClick={() => handleReaction("op")}
+                  disabled={userReacted.op}
+                  className="btn"
+                  style={{
+                    padding: "10px 18px",
+                    borderRadius: "100px",
+                    border: userReacted.op ? "2px solid var(--success)" : "1px solid var(--card-border)",
+                    background: userReacted.op ? "rgba(16,185,129,0.1)" : "#fff",
+                    fontWeight: 700,
+                    fontSize: "14px",
+                    cursor: "pointer",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "8px",
+                  }}
+                >
+                  <span>👏 Himanshu OP</span>
+                  <span style={{ fontSize: "12px", color: "var(--text-muted)", background: "var(--chip-bg)", padding: "2px 8px", borderRadius: "10px" }}>
+                    {reactions.op}
+                  </span>
+                </button>
+              </div>
+            </div>
+
+            {/* INTERACTIVE FEATURE 4: THE BADGE CLAIM FINALE */}
+            <div
+              className="card"
+              style={{
+                padding: "36px 24px",
+                marginBottom: "36px",
+                textAlign: "center",
+                border: "2px solid var(--brand-pink)",
+                background: "linear-gradient(135deg, rgba(72,113,197,0.08) 0%, rgba(188,0,112,0.12) 100%, #ffffff 100%)",
+              }}
+            >
+              <div style={{ fontSize: "36px", marginBottom: "8px" }}>
+                {claimedBadge ? "🎉" : "🎁"}
+              </div>
+              <h3 style={{ fontSize: "24px", fontWeight: 800, color: "var(--text-main)", marginBottom: "8px" }}>
+                {claimedBadge ? "You Unlocked the [⚡ AI Insider] Badge!" : "Claim Your Official [⚡ AI Insider] Badge!"}
+              </h3>
+              <p style={{ color: "var(--text-muted)", fontSize: "14px", maxWidth: "540px", margin: "0 auto 24px" }}>
+                {claimedBadge
+                  ? "Your badge is officially active in the Secret Santa room! Everyone in the lobby can see you've mastered the AI engineering story."
+                  : "Finish the showcase by claiming your badge. It will appear right next to your name in the game lobby for the entire team to see!"}
+              </p>
+
+              {claimedBadge ? (
+                <div style={{ display: "inline-flex", flexDirection: "column", gap: "12px", alignItems: "center" }}>
+                  <div
+                    style={{
+                      padding: "8px 20px",
+                      borderRadius: "100px",
+                      background: "var(--brand-gradient)",
+                      color: "#fff",
+                      fontWeight: 800,
+                      fontSize: "14px",
+                      boxShadow: "0 4px 14px rgba(188,0,112,0.3)",
+                    }}
+                  >
+                    ⚡ Verified AI Insider
+                  </div>
+                  <Link
+                    href="/"
+                    className="btn btn-black btn-lg"
+                    style={{ textDecoration: "none", marginTop: "8px" }}
+                  >
+                    Return to Game Room with Badge ➔
+                  </Link>
+                </div>
+              ) : (
+                <button
+                  onClick={handleClaimBadge}
+                  disabled={claiming}
+                  className="btn btn-black btn-lg"
+                  style={{
+                    padding: "16px 36px",
+                    fontSize: "16px",
+                    fontWeight: 800,
+                    background: "var(--brand-gradient)",
+                    border: "none",
+                    boxShadow: "0 6px 20px rgba(188,0,112,0.35)",
+                  }}
+                >
+                  {claiming ? "Activating Badge..." : "🎁 Claim My [⚡ AI Insider] Badge & Fireworks"}
+                </button>
+              )}
             </div>
 
             {/* Bottom Call to Action for Detailed Version */}

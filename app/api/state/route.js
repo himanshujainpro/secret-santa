@@ -35,19 +35,22 @@ async function who() {
 
 async function load() {
   const r = redis();
-  const [st, players, matches, votes, gifts] = await Promise.all([
+  const [st, players, matches, votes, gifts, insiders] = await Promise.all([
     r.get("fg:state"),
     r.hgetall("fg:players"),
     r.hgetall("fg:matches"),
     r.hgetall("fg:votes"),
     r.hgetall("fg:gifts"),
+    r.smembers("fg:insiders"),
   ]);
+  const insiderList = Array.isArray(insiders) ? insiders : [];
   return {
     st: st || { phase: "lobby" },
     players: players || {},
     matches: matches || {},
     votes: votes || {},
     gifts: gifts || {},
+    insiders: insiderList,
   };
 }
 
@@ -55,7 +58,7 @@ async function load() {
 export async function GET() {
   const me = await who();
   if (!me) return Response.json({ error: "auth" }, { status: 401 });
-  const { st, players, matches, votes, gifts } = await load();
+  const { st, players, matches, votes, gifts, insiders } = await load();
   const drawn = st.phase === "drawn";
 
   // Active gift on the live stage (anonymous - author ID is never attached)
@@ -82,10 +85,16 @@ export async function GET() {
     }
   }
 
+  const insiderSet = new Set(insiders || []);
+
   return Response.json({
     now: Date.now(),
-    me: { id: me.id, name: me.name, host: me.host, joined: !!players[me.id] },
-    players: Object.entries(players).map(([id, name]) => ({ id, name })),
+    me: { id: me.id, name: me.name, host: me.host, joined: !!players[me.id], isAiInsider: insiderSet.has(me.id) },
+    players: Object.entries(players).map(([id, name]) => ({
+      id,
+      name,
+      isAiInsider: insiderSet.has(id),
+    })),
     phase: st.phase,
     order: st.order || [],
     idx: st.idx ?? -1,
@@ -121,6 +130,9 @@ export async function POST(req) {
   if (A === "join") {
     if (drawn) return bad("The draw already happened.");
     await r.hset("fg:players", { [me.id]: me.name });
+  } else if (A === "claim_insider") {
+    await r.sadd("fg:insiders", me.id);
+    return Response.json({ success: true, isAiInsider: true });
   } else if (A === "leave") {
     if (drawn) return bad("The draw already happened.");
     await r.hdel("fg:players", me.id);
