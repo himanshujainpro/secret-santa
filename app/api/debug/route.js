@@ -10,7 +10,13 @@ export async function GET() {
       r.get("fg:flowers"),
       r.hgetall("fg:players"),
     ]);
-    return Response.json({ st, flowers, players });
+    return Response.json({
+      st,
+      flowers,
+      players,
+      hostsConfig: (process.env.ORGANIZER_EMAILS || "").toLowerCase().split(",").map((s) => s.trim()).filter(Boolean),
+      allowedDomain: process.env.ALLOWED_DOMAIN || "",
+    });
   } catch (e) {
     return Response.json({ error: e.message });
   }
