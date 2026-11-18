@@ -2,7 +2,7 @@
 import { useEffect, useState, useCallback, useRef } from "react";
 import { signIn, signOut } from "next-auth/react";
 import Link from "next/link";
-import { sounds, triggerGiftRain, triggerFlowerRain } from "@/lib/effects";
+import { sounds, triggerGiftRain, triggerFlowerRain, triggerDevStackRain } from "@/lib/effects";
 
 export const dynamic = "force-dynamic";
 
@@ -58,11 +58,19 @@ export default function Home() {
   const [isActing, setIsActing] = useState(false);
   const [isUnveiling, setIsUnveiling] = useState(false);
 
+  // Chief Guest Setup & Suspense State
+  const [showCgModal, setShowCgModal] = useState(false);
+  const [cgName, setCgName] = useState("");
+  const [cgTitle, setCgTitle] = useState("Founder & CEO");
+  const [cgPhotoUrl, setCgPhotoUrl] = useState("");
+  const [cgPlayerId, setCgPlayerId] = useState("");
+
   // Refs to track state transitions across polling
   const prevRevealedRef = useRef(false);
   const prevResultsRef = useRef(null);
   const prevIdxRef = useRef(-1);
   const prevInauguratedRef = useRef(null);
+  const prevCgRevealedRef = useRef(null);
 
   const toggleSound = () => {
     const nextMuted = !isMuted;
@@ -122,10 +130,18 @@ export default function Home() {
         setIsUnveiling(true);
         sounds.snip();
         sounds.shehnaiInauguration();
-        triggerFlowerRain(true);
+        triggerDevStackRain(true);
         setTimeout(() => setIsUnveiling(false), 2400);
       }
       prevInauguratedRef.current = !!j.inaugurated;
+
+      // Check if Chief Guest was just revealed -> Trigger royal drumroll, shehnai & dev stack rain!
+      if (prevCgRevealedRef.current !== null && j.chiefGuest?.revealed && !prevCgRevealedRef.current) {
+        sounds.drumroll();
+        sounds.shehnaiInauguration();
+        triggerDevStackRain(true);
+      }
+      prevCgRevealedRef.current = !!j.chiefGuest?.revealed;
 
       setD(j);
 
@@ -203,7 +219,7 @@ export default function Home() {
     setIsUnveiling(true);
     sounds.snip();
     sounds.shehnaiInauguration();
-    triggerFlowerRain(true);
+    triggerDevStackRain(true);
     await act("inaugurate");
     setTimeout(() => {
       setIsUnveiling(false);
@@ -211,9 +227,149 @@ export default function Home() {
   };
 
   const handleShowerFlowers = async () => {
-    sounds.flowerChime();
-    triggerFlowerRain(false);
+    sounds.techPowerUp();
+    triggerDevStackRain(false);
     await act("flower");
+  };
+
+  const handleSaveChiefGuest = async (e) => {
+    e.preventDefault();
+    if (!cgName.trim()) {
+      setErrorMsg("Please enter Chief Guest name!");
+      return;
+    }
+    await act("set_chief_guest", {
+      name: cgName,
+      title: cgTitle,
+      photoUrl: cgPhotoUrl,
+      id: cgPlayerId,
+    });
+    setShowCgModal(false);
+    showToast("Chief Guest successfully assigned! 👑");
+  };
+
+  const handleRevealChiefGuest = async () => {
+    sounds.drumroll();
+    sounds.shehnaiInauguration();
+    triggerDevStackRain(true);
+    await act("reveal_chief_guest");
+    showToast("Chief Guest revealed to everyone with fanfare! 🌟");
+  };
+
+  // ---------------------------------------------------------------------------
+  // Chief Guest Assignment Modal (Host Only)
+  // ---------------------------------------------------------------------------
+  const renderChiefGuestModal = () => {
+    if (!showCgModal) return null;
+    return (
+      <div className="modal-overlay" onClick={() => setShowCgModal(false)}>
+        <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+          <button className="modal-close-btn" onClick={() => setShowCgModal(false)}>✕</button>
+
+          <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "8px" }}>
+            <span className="event-badge">👑 Chief Guest Setup</span>
+          </div>
+          <h2 style={{ fontSize: "20px", fontWeight: 800, marginBottom: "8px" }}>
+            Assign VIP Chief Guest 🌟
+          </h2>
+          <p style={{ color: "var(--text-muted)", fontSize: "13px", marginBottom: "16px" }}>
+            Assign our Founder or special VIP to inaugurate the event and cut the ribbon.
+            Their identity stays <strong>100% hidden and server-redacted</strong> until you reveal them!
+          </p>
+
+          <form onSubmit={handleSaveChiefGuest}>
+            {/* Quick Player Selection */}
+            {d && d.players && d.players.length > 0 && (
+              <div style={{ marginBottom: "14px" }}>
+                <label style={{ display: "block", fontSize: "12px", fontWeight: 700, color: "var(--text-main)", marginBottom: "6px" }}>
+                  Select from joined participants (Optional):
+                </label>
+                <select
+                  value={cgPlayerId}
+                  onChange={(e) => {
+                    const selId = e.target.value;
+                    setCgPlayerId(selId);
+                    const found = d.players.find((p) => p.id === selId);
+                    if (found) {
+                      setCgName(found.name);
+                    }
+                  }}
+                  className="text-input"
+                  style={{ padding: "8px 12px" }}
+                >
+                  <option value="">-- Choose a Participant or Custom VIP below --</option>
+                  {d.players.map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.name} {p.host ? "(Host)" : ""}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+
+            <div style={{ marginBottom: "14px" }}>
+              <label style={{ display: "block", fontSize: "12px", fontWeight: 700, color: "var(--text-main)", marginBottom: "6px" }}>
+                Chief Guest Name *
+              </label>
+              <input
+                type="text"
+                placeholder="e.g. Founder &amp; CEO"
+                value={cgName}
+                onChange={(e) => setCgName(e.target.value)}
+                className="text-input"
+                style={{ padding: "8px 12px" }}
+                required
+              />
+            </div>
+
+            <div style={{ marginBottom: "14px" }}>
+              <label style={{ display: "block", fontSize: "12px", fontWeight: 700, color: "var(--text-main)", marginBottom: "6px" }}>
+                Title / Designation
+              </label>
+              <input
+                type="text"
+                placeholder="e.g. Founder &amp; CEO / VP Engineering"
+                value={cgTitle}
+                onChange={(e) => setCgTitle(e.target.value)}
+                className="text-input"
+                style={{ padding: "8px 12px" }}
+              />
+            </div>
+
+            <div style={{ marginBottom: "16px" }}>
+              <label style={{ display: "block", fontSize: "12px", fontWeight: 700, color: "var(--text-main)", marginBottom: "6px" }}>
+                Photo URL (Optional)
+              </label>
+              <input
+                type="url"
+                placeholder="https://... (or leave empty for royal monogram avatar)"
+                value={cgPhotoUrl}
+                onChange={(e) => setCgPhotoUrl(e.target.value)}
+                className="text-input"
+                style={{ padding: "8px 12px" }}
+              />
+            </div>
+
+            <div style={{ display: "flex", justifyContent: "flex-end", gap: "10px" }}>
+              <button
+                type="button"
+                onClick={() => setShowCgModal(false)}
+                className="btn btn-outline btn-sm"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={isActing}
+                className="btn btn-gradient btn-sm"
+              >
+                👑 Save Chief Guest
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    );
   };
 
   // ---------------------------------------------------------------------------
@@ -496,6 +652,7 @@ export default function Home() {
   return (
     <div>
       {renderRulesModal()}
+      {renderChiefGuestModal()}
       {toastMsg && <div className="toast-bar">{toastMsg}</div>}
 
       {/* Sleek Top Navbar */}
@@ -594,10 +751,81 @@ export default function Home() {
 
               {/* Chief Guest Ribbon Cut Action (Tied directly to the ribbon) */}
               <div className="chief-guest-panel">
-                {me.host ? (
+                {d.chiefGuest?.revealed ? (
+                  d.chiefGuest.isMe ? (
+                    <div>
+                      <div style={{ fontSize: "12px", fontWeight: 800, color: "#FDE68A", letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: "10px" }}>
+                        🎖️ CHIEF GUEST VIP PRIVILEGE
+                      </div>
+                      <button
+                        onClick={handleCutRibbon}
+                        disabled={isActing || isUnveiling}
+                        className="btn-scissors-cut"
+                      >
+                        ✂️ Cut the Ribbon &amp; Inaugurate (माननीय मुख्य अतिथि, फीता काटें!)
+                      </button>
+                      <div style={{ fontSize: "12px", color: "#FDE68A", opacity: 0.85, marginTop: "8px" }}>
+                        As our Chief Guest, snipping the ribbon will inaugurate the event with Shehnai fanfare for everyone!
+                      </div>
+                    </div>
+                  ) : me.host ? (
+                    <div>
+                      <div style={{ fontSize: "12px", fontWeight: 800, color: "#FDE68A", letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: "10px" }}>
+                        👑 ORGANIZER ACTION (CHIEF GUEST: {d.chiefGuest.name})
+                      </div>
+                      <button
+                        onClick={handleCutRibbon}
+                        disabled={isActing || isUnveiling}
+                        className="btn-scissors-cut"
+                      >
+                        ✂️ Cut the Ribbon as Organizer (Fallback)
+                      </button>
+                      <div style={{ fontSize: "12px", color: "#FDE68A", opacity: 0.85, marginTop: "8px" }}>
+                        Chief Guest ({d.chiefGuest.name}) can also cut the ribbon directly from their screen!
+                      </div>
+                    </div>
+                  ) : (
+                    <div style={{ display: "inline-flex", alignItems: "center", gap: "8px", background: "rgba(245, 158, 11, 0.15)", border: "1px solid rgba(245, 158, 11, 0.4)", padding: "10px 20px", borderRadius: "9999px", color: "#FDE68A", fontSize: "14px", fontWeight: 700 }}>
+                      <span>✂️</span>
+                      <span>Awaiting Chief Guest (<strong>{d.chiefGuest.name}</strong>) to cut the ceremonial ribbon! 🎀</span>
+                    </div>
+                  )
+                ) : d.chiefGuest?.assigned ? (
+                  me.host ? (
+                    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "10px" }}>
+                      <button
+                        onClick={handleRevealChiefGuest}
+                        disabled={isActing}
+                        className="btn btn-gradient btn-lg"
+                        style={{ boxShadow: "0 0 25px rgba(245, 158, 11, 0.6)" }}
+                      >
+                        🌟 Reveal Chief Guest ({d.chiefGuest.name}) with Fanfare!
+                      </button>
+                      <button
+                        onClick={handleCutRibbon}
+                        disabled={isActing || isUnveiling}
+                        className="btn-scissors-cut"
+                        style={{ fontSize: "14px", padding: "10px 24px" }}
+                      >
+                        ✂️ Cut Ribbon Directly as Organizer
+                      </button>
+                    </div>
+                  ) : (
+                    <div style={{ display: "inline-flex", alignItems: "center", gap: "8px", background: "rgba(245, 158, 11, 0.15)", border: "1px solid rgba(245, 158, 11, 0.4)", padding: "10px 20px", borderRadius: "9999px", color: "#FDE68A", fontSize: "14px", fontWeight: 700 }}>
+                      <span>🤫</span>
+                      <span>Mystery Chief Guest being revealed soon... Dil thaam ke baithiye! 🪑</span>
+                    </div>
+                  )
+                ) : me.host ? (
                   <div>
-                    <div style={{ fontSize: "12px", fontWeight: 800, color: "#FDE68A", letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: "10px" }}>
-                      👑 ORGANIZER (CHIEF GUEST) ACTION
+                    <div style={{ display: "flex", justifyContent: "center", gap: "10px", flexWrap: "wrap", marginBottom: "12px" }}>
+                      <button
+                        onClick={() => setShowCgModal(true)}
+                        disabled={isActing}
+                        className="btn btn-gradient btn-sm"
+                      >
+                        👑 Assign VIP Chief Guest (e.g. Founder)
+                      </button>
                     </div>
                     <button
                       onClick={handleCutRibbon}
@@ -606,9 +834,6 @@ export default function Home() {
                     >
                       ✂️ Cut the Ribbon &amp; Inaugurate (फीता काटें!)
                     </button>
-                    <div style={{ fontSize: "12px", color: "#FDE68A", opacity: 0.85, marginTop: "8px" }}>
-                      Clicking will snip the ribbon, play royal Shehnai fanfare &amp; shower flowers for the entire team!
-                    </div>
                   </div>
                 ) : (
                   <div style={{ display: "inline-flex", alignItems: "center", gap: "8px", background: "rgba(245, 158, 11, 0.15)", border: "1px solid rgba(245, 158, 11, 0.4)", padding: "10px 20px", borderRadius: "9999px", color: "#FDE68A", fontSize: "14px", fontWeight: 700 }}>
@@ -625,28 +850,77 @@ export default function Home() {
                 <span>🎉</span> GRAND OPENING • भव्य उद्घाटन
               </div>
 
+              {/* Chief Guest Spotlight or Mystery Card */}
+              {d.chiefGuest?.revealed ? (
+                <div className="chief-guest-spotlight-card">
+                  <div className="cg-spotlight-badge">
+                    <span>👑</span> Honorable Chief Guest • मुख्य अतिथि
+                  </div>
+                  <div className="cg-avatar-wrapper">
+                    <div className="cg-avatar-ring">
+                      {d.chiefGuest.photoUrl ? (
+                        <img src={d.chiefGuest.photoUrl} alt={d.chiefGuest.name} className="cg-avatar-img" />
+                      ) : (
+                        <div className="cg-avatar-img" style={{ color: "#FFF", fontWeight: 800 }}>
+                          {getInitials(d.chiefGuest.name)}
+                        </div>
+                      )}
+                    </div>
+                    <span className="cg-crown-icon">👑</span>
+                  </div>
+                  <div className="cg-name">{d.chiefGuest.name}</div>
+                  <div className="cg-title">{d.chiefGuest.title || "Founder & CEO"}</div>
+                  <div className="cg-vip-tag">
+                    {d.chiefGuest.isMe ? "🎖️ YOU ARE OUR CHIEF GUEST! CUT THE RIBBON ABOVE!" : "Presiding over Grand Inauguration"}
+                  </div>
+                </div>
+              ) : d.chiefGuest?.assigned ? (
+                <div className="chief-guest-mystery-box">
+                  <div className="mystery-avatar-silhouette">
+                    <span>?</span>
+                  </div>
+                  <div className="mystery-cg-title">
+                    🤫 Mystery Chief Guest Assigned!
+                  </div>
+                  <div className="mystery-cg-sub">
+                    Who will inaugurate Scans.ai Secret Santa? The organizer will reveal our VIP Chief Guest with a drumroll soon!
+                  </div>
+                  {me.host && (
+                    <div style={{ marginTop: "12px" }}>
+                      <button
+                        onClick={handleRevealChiefGuest}
+                        disabled={isActing}
+                        className="btn btn-gradient btn-sm"
+                      >
+                        🌟 Reveal Chief Guest ({d.chiefGuest.name}) with Fanfare
+                      </button>
+                    </div>
+                  )}
+                </div>
+              ) : null}
+
               <h1 className="inauguration-title">
                 Secret Santa 2024 ki Grand Opening 🛍️
               </h1>
 
               <p className="inauguration-desc">
                 दुकान का फीता कटने की प्रतीक्षा हो रही है! (Awaiting Ribbon Cutting Ceremony).<br />
-                Meanwhile, shower flowers, give your blessings &amp; claim your VIP Pass!
+                Meanwhile, shower flowers &amp; dev tools, give your blessings &amp; claim your VIP Pass!
               </p>
 
-              {/* Interactive Live Flower Shower & Counter */}
+              {/* Interactive Live Flower & Dev Stack Shower */}
               <div style={{ margin: "20px 0" }}>
                 <button
                   onClick={handleShowerFlowers}
                   disabled={isActing}
                   className="btn-flower-shower"
                 >
-                  🌸 Shower Flowers (पुष्प वर्षा करें) ✨
+                  ⚡ Shower Tech &amp; Flowers (पुष्प व टेक वर्षा) ✨
                 </button>
                 <div>
                   <div className="flower-live-pill">
-                    <span>🌸</span>
-                    <span>{d.flowerCount || 0} Flowers Showered by Scans.ai Team</span>
+                    <span>⚡🌸</span>
+                    <span>{d.flowerCount || 0} Tech Tokens &amp; Flowers Showered</span>
                   </div>
                 </div>
               </div>
@@ -1100,7 +1374,20 @@ export default function Home() {
                   🎲 Draw Matches ({d.players.length} Players in Lobby)
                 </button>
 
-                <div style={{ marginTop: "12px", textAlign: "right" }}>
+                <div style={{ marginTop: "12px", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "8px" }}>
+                  <button
+                    onClick={() => {
+                      if (confirm("⚠️ NUCLEAR RESET: This will wipe ALL game state, players, matches, votes, gifts, flower count, and Chief Guest from Upstash Redis and clear memory cache to 0 KB.\n\nAre you ABSOLUTELY sure?")) {
+                        act("nuclear_reset");
+                      }
+                    }}
+                    disabled={isActing}
+                    className="btn-nuclear-reset"
+                    title="Zero cache wipe - purges all Redis keys"
+                  >
+                    🧹 Nuclear Reset (0 KB)
+                  </button>
+
                   <button
                     onClick={() => {
                       if (confirm("Replay ribbon cutting ceremony? Curtains and ribbon will close again for suspense.")) {
@@ -1143,8 +1430,8 @@ export default function Home() {
 
                 <button
                   onClick={() => {
-                    sounds.fanfare();
-                    triggerGiftRain();
+                    sounds.drumroll();
+                    triggerDevStackRain(true);
                     act("reveal");
                   }}
                   disabled={idx < 0 || idx >= totalPitches || d.revealed || isActing}
@@ -1190,8 +1477,77 @@ export default function Home() {
                 >
                   Reset Draw
                 </button>
+
+                <button
+                  onClick={() => {
+                    if (confirm("⚠️ NUCLEAR RESET: This will wipe ALL game state, players, matches, votes, gifts, flower count, and Chief Guest from Upstash Redis and clear memory cache to 0 KB.\n\nAre you ABSOLUTELY sure?")) {
+                      act("nuclear_reset");
+                    }
+                  }}
+                  disabled={isActing}
+                  className="btn-nuclear-reset"
+                  title="Zero cache wipe - purges all Redis keys"
+                >
+                  🧹 Nuclear Reset (0 KB)
+                </button>
               </div>
             )}
+
+            {/* Chief Guest Management Section */}
+            <div style={{ marginTop: "16px", paddingTop: "14px", borderTop: "1px dashed rgba(188,0,112,0.3)" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px", flexWrap: "wrap", gap: "8px" }}>
+                <span style={{ fontSize: "13px", fontWeight: 800, color: "var(--brand-pink)" }}>
+                  👑 Chief Guest Controls
+                </span>
+                <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+                  <button
+                    onClick={() => {
+                      if (d.chiefGuest) {
+                        setCgName(d.chiefGuest.name || "");
+                        setCgTitle(d.chiefGuest.title || "Founder & CEO");
+                        setCgPhotoUrl(d.chiefGuest.photoUrl || "");
+                        setCgPlayerId(d.chiefGuest.id || "");
+                      }
+                      setShowCgModal(true);
+                    }}
+                    disabled={isActing}
+                    className="btn btn-outline btn-sm"
+                  >
+                    {d.chiefGuest?.assigned ? "✏️ Edit Chief Guest" : "➕ Assign Chief Guest"}
+                  </button>
+                  {d.chiefGuest?.assigned && !d.chiefGuest?.revealed && (
+                    <button
+                      onClick={handleRevealChiefGuest}
+                      disabled={isActing}
+                      className="btn btn-gradient btn-sm"
+                    >
+                      🌟 Reveal with Fanfare
+                    </button>
+                  )}
+                  {d.chiefGuest?.assigned && (
+                    <button
+                      onClick={() => {
+                        if (confirm("Reset Chief Guest? The identity will be removed.")) {
+                          act("reset_chief_guest");
+                        }
+                      }}
+                      disabled={isActing}
+                      className="btn btn-outline btn-sm"
+                    >
+                      🔄 Clear Chief Guest
+                    </button>
+                  )}
+                </div>
+              </div>
+              {d.chiefGuest?.assigned && (
+                <div style={{ fontSize: "12px", color: "var(--text-muted)" }}>
+                  Assigned: <strong>{d.chiefGuest.name}</strong> ({d.chiefGuest.title || "VIP"}) — Status:{" "}
+                  <span style={{ color: d.chiefGuest.revealed ? "#10B981" : "#F59E0B", fontWeight: 700 }}>
+                    {d.chiefGuest.revealed ? "Revealed to All (Public)" : "Mystery Silhouette (Redacted on server for non-hosts)"}
+                  </span>
+                </div>
+              )}
+            </div>
           </div>
         )}
           </>

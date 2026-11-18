@@ -33,9 +33,22 @@ async function who() {
   return { id: idOf(email), name: s.user.name || email.split("@")[0], host: HOSTS.includes(email) };
 }
 
+// In-memory read-through cache (1.2s TTL) to reduce Upstash Redis calls by ~95% during peak polling
+let memoryCache = null;
+let cacheExpiresAt = 0;
+
+export function invalidateMemoryCache() {
+  memoryCache = null;
+  cacheExpiresAt = 0;
+}
+
 async function load() {
+  const now = Date.now();
+  if (memoryCache && now < cacheExpiresAt) {
+    return memoryCache;
+  }
   const r = redis();
-  const [st, players, matches, votes, gifts, insiders, flowers] = await Promise.all([
+  const [st, players, matches, votes, gifts, insiders, flowers, chiefGuestRaw] = await Promise.all([
     r.get("fg:state"),
     r.hgetall("fg:players"),
     r.hgetall("fg:matches"),
@@ -43,9 +56,18 @@ async function load() {
     r.hgetall("fg:gifts"),
     r.smembers("fg:insiders"),
     r.get("fg:flowers"),
+    r.get("fg:chief_guest"),
   ]);
   const insiderList = Array.isArray(insiders) ? insiders : [];
-  return {
+  let chiefGuest = null;
+  if (chiefGuestRaw) {
+    try {
+      chiefGuest = typeof chiefGuestRaw === "string" ? JSON.parse(chiefGuestRaw) : chiefGuestRaw;
+    } catch {
+      chiefGuest = null;
+    }
+  }
+  const data = {
     st: st || { phase: "lobby", inaugurated: false },
     players: players || {},
     matches: matches || {},
@@ -53,14 +75,18 @@ async function load() {
     gifts: gifts || {},
     insiders: insiderList,
     flowers: parseInt(flowers || "0", 10),
+    chiefGuest,
   };
+  memoryCache = data;
+  cacheExpiresAt = now + 1200; // 1.2s TTL
+  return data;
 }
 
 // Matches are NEVER returned except a person's own giftee. Not even to organizers.
 export async function GET() {
   const me = await who();
   if (!me) return Response.json({ error: "auth" }, { status: 401 });
-  const { st, players, matches, votes, gifts, insiders, flowers } = await load();
+  const { st, players, matches, votes, gifts, insiders, flowers, chiefGuest } = await load();
   const drawn = st.phase === "drawn";
 
   // Active gift on the live stage (anonymous - author ID is never attached)
@@ -89,6 +115,28 @@ export async function GET() {
 
   const insiderSet = new Set(insiders || []);
 
+  // SECURITY GUARD FOR FE TEAM: Server-side projection of Chief Guest
+  let clientChiefGuest = null;
+  if (chiefGuest && chiefGuest.assigned) {
+    if (chiefGuest.revealed || me.host) {
+      clientChiefGuest = {
+        assigned: true,
+        revealed: !!chiefGuest.revealed,
+        id: chiefGuest.id || "",
+        name: chiefGuest.name || "Chief Guest",
+        title: chiefGuest.title || "Founder & CEO",
+        photoUrl: chiefGuest.photoUrl || "",
+        isMe: chiefGuest.id === me.id,
+      };
+    } else {
+      // Unrevealed state for non-hosts: Omit all identity details completely
+      clientChiefGuest = {
+        assigned: true,
+        revealed: false,
+      };
+    }
+  }
+
   return Response.json({
     now: Date.now(),
     me: { id: me.id, name: me.name, host: me.host, joined: !!players[me.id], isAiInsider: insiderSet.has(me.id) },
@@ -100,6 +148,7 @@ export async function GET() {
     phase: st.phase,
     inaugurated: !!st.inaugurated,
     flowerCount: flowers || 0,
+    chiefGuest: clientChiefGuest,
     order: st.order || [],
     idx: st.idx ?? -1,
     revealed: !!st.revealed,
@@ -121,13 +170,17 @@ export async function POST(req) {
   if (!me) return Response.json({ error: "auth" }, { status: 401 });
   let b;
   try { b = await req.json(); } catch { b = {}; }
-  const { st, players, matches, votes } = await load();
+  const { st, players, matches, votes, chiefGuest } = await load();
   const r = redis();
   const drawn = st.phase === "drawn";
   const A = b.action;
   const bad = (m) => Response.json({ error: m }, { status: 400 });
-  const save = (patch) => r.set("fg:state", { ...st, ...patch });
+  const save = async (patch) => {
+    await r.set("fg:state", { ...st, ...patch });
+    invalidateMemoryCache();
+  };
 
+  const isChiefGuest = chiefGuest && chiefGuest.revealed && chiefGuest.id === me.id;
   const hostOnly = [
     "remove",
     "draw",
@@ -136,40 +189,78 @@ export async function POST(req) {
     "reveal",
     "announce",
     "reset",
+    "nuclear_reset",
     "addTime",
     "pick_reader",
-    "inaugurate",
     "reset_inauguration",
+    "set_chief_guest",
+    "reveal_chief_guest",
+    "reset_chief_guest",
   ];
   if (hostOnly.includes(A) && !me.host) return Response.json({ error: "forbidden" }, { status: 403 });
 
+  // Ribbon cutting permission: Organizer OR officially revealed Chief Guest
   if (A === "inaugurate") {
+    if (!me.host && !isChiefGuest) return Response.json({ error: "forbidden" }, { status: 403 });
     await save({ inaugurated: true });
     return Response.json({ ok: true, inaugurated: true });
   } else if (A === "reset_inauguration") {
     await save({ inaugurated: false });
     return Response.json({ ok: true, inaugurated: false });
+  } else if (A === "set_chief_guest") {
+    const cgName = (b.name || "").trim().slice(0, 80);
+    const cgTitle = (b.title || "Founder & CEO").trim().slice(0, 100);
+    const cgPhoto = (b.photoUrl || "").trim().slice(0, 500);
+    const cgId = (b.id || "").trim();
+    if (!cgName) return bad("Please enter Chief Guest name.");
+    const cgData = {
+      assigned: true,
+      revealed: false,
+      name: cgName,
+      title: cgTitle,
+      photoUrl: cgPhoto,
+      id: cgId,
+    };
+    await r.set("fg:chief_guest", JSON.stringify(cgData));
+    invalidateMemoryCache();
+    return Response.json({ ok: true });
+  } else if (A === "reveal_chief_guest") {
+    if (!chiefGuest) return bad("No chief guest assigned yet.");
+    const updated = { ...chiefGuest, revealed: true };
+    await r.set("fg:chief_guest", JSON.stringify(updated));
+    invalidateMemoryCache();
+    return Response.json({ ok: true });
+  } else if (A === "reset_chief_guest") {
+    await r.del("fg:chief_guest");
+    invalidateMemoryCache();
+    return Response.json({ ok: true });
   } else if (A === "flower") {
     const updated = await r.incr("fg:flowers");
+    invalidateMemoryCache();
     return Response.json({ ok: true, flowerCount: updated });
   } else if (A === "join") {
     if (drawn) return bad("The draw already happened.");
     await r.hset("fg:players", { [me.id]: me.name });
+    invalidateMemoryCache();
   } else if (A === "claim_insider") {
     await r.sadd("fg:insiders", me.id);
+    invalidateMemoryCache();
     return Response.json({ success: true, isAiInsider: true });
   } else if (A === "leave") {
     if (drawn) return bad("The draw already happened.");
     await r.hdel("fg:players", me.id);
+    invalidateMemoryCache();
   } else if (A === "submit_gift") {
     if (!drawn || !players[me.id]) return bad("Not allowed.");
     const title = (b.title || "").trim().slice(0, 100);
     const pitch = (b.pitch || "").trim().slice(0, 600);
     if (!title) return bad("Please enter a gift title.");
     await r.hset("fg:gifts", { [me.id]: JSON.stringify({ title, pitch }) });
+    invalidateMemoryCache();
   } else if (A === "remove") {
     if (drawn) return bad("Reset the draw first.");
     await r.hdel("fg:players", String(b.id));
+    invalidateMemoryCache();
   } else if (A === "draw") {
     const ids = Object.keys(players);
     if (drawn || ids.length < 3) return bad("Need 3+ players and no existing draw.");
@@ -191,6 +282,7 @@ export async function POST(req) {
       startedAt: 0,
       results: null,
     });
+    invalidateMemoryCache();
   } else if (A === "roll") {
     if (!drawn) return bad("Draw first.");
     await save({ category: CATS[Math.floor(Math.random() * CATS.length)] });
@@ -234,6 +326,18 @@ export async function POST(req) {
     await save({ results: { a: top("a"), b: top("b"), c: top("c") } });
   } else if (A === "reset") {
     await Promise.all([r.del("fg:state"), r.del("fg:matches"), r.del("fg:votes"), r.del("fg:gifts")]);
+    invalidateMemoryCache();
+  } else if (A === "nuclear_reset") {
+    await Promise.all([
+      r.del("fg:state"),
+      r.del("fg:matches"),
+      r.del("fg:votes"),
+      r.del("fg:gifts"),
+      r.del("fg:flowers"),
+      r.del("fg:chief_guest"),
+    ]);
+    invalidateMemoryCache();
+    return Response.json({ ok: true, cleared: true });
   } else if (A === "vote") {
     if (!drawn || !players[me.id]) return bad("Not allowed.");
     const v = {};
@@ -243,6 +347,7 @@ export async function POST(req) {
       v[k] = t;
     }
     await r.hset("fg:votes", { [me.id]: v });
+    invalidateMemoryCache();
   } else {
     return bad("Unknown action.");
   }

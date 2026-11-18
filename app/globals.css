@@ -1128,3 +1128,188 @@ textarea.text-input {
   justify-content: center;
   gap: 8px;
 }
+
+/* -------------------------------------------------------------------------- */
+/* Chief Guest Suspense & Spotlight Reveal Styles                             */
+/* -------------------------------------------------------------------------- */
+
+/* Mystery Box (Before Reveal) */
+.chief-guest-mystery-box {
+  background: linear-gradient(145deg, rgba(30, 4, 18, 0.95) 0%, rgba(15, 23, 42, 0.95) 100%);
+  border: 2px dashed rgba(245, 158, 11, 0.6);
+  border-radius: 20px;
+  padding: 22px 18px;
+  margin: 18px auto;
+  max-width: 440px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.6), inset 0 0 20px rgba(245, 158, 11, 0.15);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.mystery-avatar-silhouette {
+  width: 84px;
+  height: 84px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #334155 0%, #0F172A 80%);
+  border: 3px solid rgba(245, 158, 11, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 40px;
+  margin-bottom: 12px;
+  box-shadow: 0 0 25px rgba(245, 158, 11, 0.4);
+  animation: mysteryGlow 2.5s infinite alternate ease-in-out;
+}
+
+@keyframes mysteryGlow {
+  0% { transform: scale(0.97); box-shadow: 0 0 15px rgba(245, 158, 11, 0.3); }
+  100% { transform: scale(1.05); box-shadow: 0 0 35px rgba(245, 158, 11, 0.8), 0 0 50px rgba(188, 0, 112, 0.4); }
+}
+
+.mystery-cg-title {
+  font-family: 'Sora', sans-serif;
+  font-size: 18px;
+  font-weight: 800;
+  color: #FDE68A;
+  margin-bottom: 4px;
+}
+
+.mystery-cg-sub {
+  font-size: 13px;
+  color: #CBD5E1;
+  max-width: 320px;
+  line-height: 1.4;
+}
+
+/* Spotlight Card (After Reveal) */
+.chief-guest-spotlight-card {
+  background: linear-gradient(135deg, rgba(88, 8, 38, 0.95) 0%, rgba(20, 10, 35, 0.98) 100%);
+  border: 2px solid #F59E0B;
+  border-radius: 24px;
+  padding: 24px 20px;
+  margin: 20px auto;
+  max-width: 480px;
+  box-shadow: 0 15px 45px rgba(0,0,0,0.7), 0 0 40px rgba(245, 158, 11, 0.45);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  position: relative;
+  animation: cgRevealPop 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes cgRevealPop {
+  0% { transform: scale(0.85); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.cg-spotlight-badge {
+  background: linear-gradient(90deg, #F59E0B 0%, #E11D48 100%);
+  color: #FFF;
+  font-family: 'Sora', sans-serif;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 4px 14px;
+  border-radius: 9999px;
+  margin-bottom: 14px;
+  box-shadow: 0 4px 15px rgba(245, 158, 11, 0.4);
+}
+
+.cg-avatar-wrapper {
+  position: relative;
+  margin-bottom: 14px;
+}
+
+.cg-avatar-ring {
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  padding: 4px;
+  background: linear-gradient(135deg, #FDE68A 0%, #F59E0B 50%, #E11D48 100%);
+  box-shadow: 0 0 35px rgba(245, 158, 11, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cg-avatar-img {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+  background: #1E293B;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 44px;
+}
+
+.cg-crown-icon {
+  position: absolute;
+  top: -12px;
+  right: -6px;
+  font-size: 26px;
+  filter: drop-shadow(0 4px 8px rgba(0,0,0,0.6));
+  animation: crownBob 2s infinite ease-in-out;
+}
+
+@keyframes crownBob {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-4px) rotate(6deg); }
+}
+
+.cg-name {
+  font-family: 'Sora', sans-serif;
+  font-size: 24px;
+  font-weight: 800;
+  color: #FFF;
+  margin-bottom: 4px;
+  text-shadow: 0 2px 10px rgba(0,0,0,0.5);
+}
+
+.cg-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: #FDE68A;
+  margin-bottom: 8px;
+}
+
+.cg-vip-tag {
+  background: rgba(245, 158, 11, 0.2);
+  border: 1px solid rgba(245, 158, 11, 0.5);
+  color: #FEF3C7;
+  padding: 4px 12px;
+  border-radius: 9999px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+/* Nuclear Reset Button */
+.btn-nuclear-reset {
+  background: linear-gradient(135deg, #DC2626 0%, #991B1B 100%);
+  color: #FFF;
+  border: 1px solid #F87171;
+  font-family: 'Sora', sans-serif;
+  font-weight: 800;
+  font-size: 13px;
+  padding: 10px 18px;
+  border-radius: 12px;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(220, 38, 38, 0.35);
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-nuclear-reset:hover {
+  background: linear-gradient(135deg, #EF4444 0%, #B91C1C 100%);
+  box-shadow: 0 6px 20px rgba(220, 38, 38, 0.55);
+  transform: translateY(-1px);
+}
