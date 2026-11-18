@@ -1100,6 +1100,106 @@ textarea.text-input {
   box-shadow: 0 8px 25px rgba(225, 29, 72, 0.65);
 }
 
+/* Shower Mode Selector Segmented Pills */
+.shower-mode-pills {
+  display: inline-flex;
+  background: rgba(15, 23, 42, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 9999px;
+  padding: 4px;
+  gap: 4px;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.shower-mode-pill {
+  background: transparent;
+  color: #94A3B8;
+  border: none;
+  border-radius: 9999px;
+  padding: 7px 15px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: 'Inter', sans-serif;
+}
+
+.shower-mode-pill:hover {
+  color: #FFFFFF;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.shower-mode-pill.active {
+  background: linear-gradient(135deg, #4871C5 0%, #BC0070 100%);
+  color: #FFFFFF;
+  box-shadow: 0 2px 10px rgba(188, 0, 112, 0.45);
+}
+
+/* Meeting Live Celebration Bar */
+.meeting-celebration-bar {
+  background: linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(30, 4, 18, 0.95) 100%);
+  border: 1px solid rgba(188, 0, 112, 0.35);
+  border-radius: 16px;
+  padding: 12px 18px;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
+}
+
+.celebration-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: #F8FAFC;
+}
+
+.btn-shower-quick {
+  background: linear-gradient(135deg, #BC0070 0%, #E11D48 100%);
+  color: #FFFFFF;
+  font-family: 'Sora', sans-serif;
+  font-weight: 800;
+  font-size: 13px;
+  padding: 9px 18px;
+  border-radius: 9999px;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  cursor: pointer;
+  box-shadow: 0 4px 15px rgba(225, 29, 72, 0.4);
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.btn-shower-quick:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(225, 29, 72, 0.6);
+  background: linear-gradient(135deg, #E11D48 0%, #BC0070 100%);
+}
+
+.shower-counter-pill {
+  background: rgba(225, 29, 72, 0.2);
+  border: 1px solid rgba(251, 113, 133, 0.35);
+  border-radius: 9999px;
+  padding: 5px 12px;
+  font-size: 12px;
+  font-weight: 800;
+  color: #FDA4AF;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
 .flower-live-pill {
   display: inline-flex;
   align-items: center;

@@ -2,7 +2,7 @@
 import { useEffect, useState, useCallback, useRef } from "react";
 import { signIn, signOut } from "next-auth/react";
 import Link from "next/link";
-import { sounds, triggerGiftRain, triggerFlowerRain, triggerDevStackRain } from "@/lib/effects";
+import { sounds, triggerGiftRain, triggerFlowerRain, triggerDevStackRain, triggerNameRain, triggerComboRain } from "@/lib/effects";
 
 export const dynamic = "force-dynamic";
 
@@ -57,6 +57,7 @@ export default function Home() {
   const [toastMsg, setToastMsg] = useState("");
   const [isActing, setIsActing] = useState(false);
   const [isUnveiling, setIsUnveiling] = useState(false);
+  const [showerMode, setShowerMode] = useState("names"); // 'names' | 'tech' | 'flowers' | 'mix'
 
   // Chief Guest Setup & Suspense State
   const [showCgModal, setShowCgModal] = useState(false);
@@ -125,21 +126,21 @@ export default function Home() {
       }
       prevIdxRef.current = j.idx;
 
-      // Check if Inauguration ceremony just happened -> Trigger royal fanfare & flower rain
+      // Check if Inauguration ceremony just happened -> Trigger royal fanfare & teammate name rain
       if (j.inaugurated && prevInauguratedRef.current === false) {
         setIsUnveiling(true);
         sounds.snip();
         sounds.shehnaiInauguration();
-        triggerDevStackRain(true);
+        triggerNameRain(j.players || d?.players, true);
         setTimeout(() => setIsUnveiling(false), 2400);
       }
       prevInauguratedRef.current = !!j.inaugurated;
 
-      // Check if Chief Guest was just revealed -> Trigger royal drumroll, shehnai & dev stack rain!
+      // Check if Chief Guest was just revealed -> Trigger royal drumroll, shehnai & celebration rain!
       if (prevCgRevealedRef.current !== null && j.chiefGuest?.revealed && !prevCgRevealedRef.current) {
         sounds.drumroll();
         sounds.shehnaiInauguration();
-        triggerDevStackRain(true);
+        triggerComboRain(j.players || d?.players, true);
       }
       prevCgRevealedRef.current = !!j.chiefGuest?.revealed;
 
@@ -207,10 +208,26 @@ export default function Home() {
     setCurrentIdeaIndex((prev) => (prev + 1) % IDEA_SPARKS.length);
   };
 
+  const triggerCustomShower = (mode = showerMode, grand = false) => {
+    if (mode === "names") {
+      sounds.fanfare();
+      triggerNameRain(d?.players, grand);
+    } else if (mode === "tech") {
+      sounds.techPowerUp();
+      triggerDevStackRain(grand);
+    } else if (mode === "flowers") {
+      sounds.flowerChime();
+      triggerFlowerRain(grand);
+    } else {
+      sounds.fanfare();
+      triggerComboRain(d?.players, grand);
+    }
+  };
+
   const handleRevealGifteeToggle = () => {
     if (!showGiftee) {
       sounds.fanfare();
-      triggerGiftRain();
+      triggerNameRain(d?.players, false);
     }
     setShowGiftee(!showGiftee);
   };
@@ -219,7 +236,8 @@ export default function Home() {
     setIsUnveiling(true);
     sounds.snip();
     sounds.shehnaiInauguration();
-    triggerDevStackRain(true);
+    // Ribbon ceremony strictly showers teammate name badges!
+    triggerNameRain(d?.players, true);
     await act("inaugurate");
     setTimeout(() => {
       setIsUnveiling(false);
@@ -227,8 +245,7 @@ export default function Home() {
   };
 
   const handleShowerFlowers = async () => {
-    sounds.techPowerUp();
-    triggerDevStackRain(false);
+    triggerCustomShower(showerMode, false);
     await act("flower");
   };
 
@@ -251,7 +268,7 @@ export default function Home() {
   const handleRevealChiefGuest = async () => {
     sounds.drumroll();
     sounds.shehnaiInauguration();
-    triggerDevStackRain(true);
+    triggerComboRain(d?.players, true);
     await act("reveal_chief_guest");
     showToast("Chief Guest revealed to everyone with fanfare! 🌟");
   };
@@ -908,19 +925,56 @@ export default function Home() {
                 Meanwhile, shower developer tools, show your support &amp; claim your VIP Pass!
               </p>
 
-              {/* Interactive Live Flower & Dev Stack Shower */}
-              <div style={{ margin: "20px 0" }}>
+              {/* Interactive Live Shower with Mode Selector */}
+              <div style={{ margin: "22px 0" }}>
+                <div style={{ display: "flex", justifyContent: "center", marginBottom: "14px" }}>
+                  <div className="shower-mode-pills">
+                    <button
+                      type="button"
+                      className={`shower-mode-pill ${showerMode === "names" ? "active" : ""}`}
+                      onClick={() => setShowerMode("names")}
+                    >
+                      👤 Team Names
+                    </button>
+                    <button
+                      type="button"
+                      className={`shower-mode-pill ${showerMode === "tech" ? "active" : ""}`}
+                      onClick={() => setShowerMode("tech")}
+                    >
+                      ⚡ Tech Tools
+                    </button>
+                    <button
+                      type="button"
+                      className={`shower-mode-pill ${showerMode === "flowers" ? "active" : ""}`}
+                      onClick={() => setShowerMode("flowers")}
+                    >
+                      🌸 Flowers
+                    </button>
+                    <button
+                      type="button"
+                      className={`shower-mode-pill ${showerMode === "mix" ? "active" : ""}`}
+                      onClick={() => setShowerMode("mix")}
+                    >
+                      🎲 Mixed
+                    </button>
+                  </div>
+                </div>
+
                 <button
                   onClick={handleShowerFlowers}
                   disabled={isActing}
                   className="btn-flower-shower"
                 >
-                  ⚡ Shower Developer Tools (Dev Storm) ✨
+                  {showerMode === "names" && "👤 Shower Team Names (Celebration) 🎉"}
+                  {showerMode === "tech" && "⚡ Shower Developer Tools (Dev Storm) 🚀"}
+                  {showerMode === "flowers" && "🌸 Shower Festive Flowers (Blossoms) ✨"}
+                  {showerMode === "mix" && "🎲 Shower Mega Mix Celebration 🎊"}
                 </button>
+
                 <div>
                   <div className="flower-live-pill">
-                    <span>⚡🚀</span>
-                    <span>{d.flowerCount || 0} Tech Tool Badges Showered</span>
+                    <span>✨🎉</span>
+                    <span>{d.flowerCount || 0} Celebrations Showered</span>
                   </div>
                 </div>
               </div>
@@ -989,6 +1043,60 @@ export default function Home() {
         {/* Main Game Interface (visible when inaugurated) */}
         {(d.inaugurated && !isUnveiling) && (
           <>
+            {/* Meeting Live Celebration Bar: Shower Teammates, Tech, Flowers */}
+            <div className="meeting-celebration-bar">
+              <div className="celebration-title">
+                <span style={{ fontSize: "18px" }}>🎉</span>
+                <span><strong>Meeting Celebration:</strong> Shower colleagues &amp; cheer live!</span>
+              </div>
+
+              <div className="shower-mode-pills">
+                <button
+                  type="button"
+                  className={`shower-mode-pill ${showerMode === "names" ? "active" : ""}`}
+                  onClick={() => setShowerMode("names")}
+                >
+                  👤 Team Names
+                </button>
+                <button
+                  type="button"
+                  className={`shower-mode-pill ${showerMode === "tech" ? "active" : ""}`}
+                  onClick={() => setShowerMode("tech")}
+                >
+                  ⚡ Tech Tools
+                </button>
+                <button
+                  type="button"
+                  className={`shower-mode-pill ${showerMode === "flowers" ? "active" : ""}`}
+                  onClick={() => setShowerMode("flowers")}
+                >
+                  🌸 Flowers
+                </button>
+                <button
+                  type="button"
+                  className={`shower-mode-pill ${showerMode === "mix" ? "active" : ""}`}
+                  onClick={() => setShowerMode("mix")}
+                >
+                  🎲 Mixed
+                </button>
+              </div>
+
+              <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                <button
+                  onClick={handleShowerFlowers}
+                  disabled={isActing}
+                  className="btn-shower-quick"
+                >
+                  {showerMode === "names" && "👤 Shower Names ✨"}
+                  {showerMode === "tech" && "⚡ Shower Tools 🚀"}
+                  {showerMode === "flowers" && "🌸 Shower Flowers 🌺"}
+                  {showerMode === "mix" && "🎲 Mega Mix 🎊"}
+                </button>
+                <div className="shower-counter-pill" title="Total celebrations showered">
+                  <span>✨</span> {d.flowerCount || 0}
+                </div>
+              </div>
+            </div>
             {/* Phase / Lobby Card with Join & Leave Options */}
             {!drawn && (
           <div className="card">
@@ -1431,7 +1539,7 @@ export default function Home() {
                 <button
                   onClick={() => {
                     sounds.drumroll();
-                    triggerDevStackRain(true);
+                    triggerComboRain(d?.players, true);
                     act("reveal");
                   }}
                   disabled={idx < 0 || idx >= totalPitches || d.revealed || isActing}
@@ -1443,7 +1551,7 @@ export default function Home() {
                 <button
                   onClick={() => {
                     sounds.fanfare();
-                    triggerGiftRain();
+                    triggerNameRain(d?.players, true);
                     act("announce");
                   }}
                   disabled={isActing}
