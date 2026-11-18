@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState, useCallback, useRef } from "react";
 import { signIn, signOut } from "next-auth/react";
+import Link from "next/link";
 import { sounds, triggerGiftRain } from "@/lib/effects";
 
 const PITCH_DURATION = 90;
@@ -290,6 +291,19 @@ export default function Home() {
               <span className="event-badge">Fun Friday</span>
             </div>
             <div className="header-actions">
+              <Link
+                href="/ai"
+                className="header-btn"
+                style={{
+                  background: "linear-gradient(135deg, rgba(72,113,197,0.12) 0%, rgba(188,0,112,0.12) 100%)",
+                  border: "1px solid rgba(188,0,112,0.25)",
+                  color: "var(--brand-pink)",
+                  fontWeight: 700,
+                  textDecoration: "none",
+                }}
+              >
+                ⚡ How AI Built This
+              </Link>
               <button className="header-btn" onClick={() => setShowRules(true)}>
                 📖 Rules
               </button>
@@ -341,8 +355,50 @@ export default function Home() {
                 <div className="step-desc">Random colleague pitches it live, receiver guesses the real giver!</div>
               </div>
             </div>
+
+            {/* AI Showcase Banner */}
+            <div
+              style={{
+                marginTop: "28px",
+                padding: "16px 20px",
+                background: "linear-gradient(135deg, rgba(72,113,197,0.06) 0%, rgba(188,0,112,0.06) 100%)",
+                borderRadius: "14px",
+                border: "1px solid rgba(72,113,197,0.18)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                flexWrap: "wrap",
+                gap: "12px",
+                textAlign: "left",
+              }}
+            >
+              <div>
+                <div style={{ fontSize: "14px", fontWeight: 700, color: "var(--text-main)", display: "flex", alignItems: "center", gap: "6px" }}>
+                  <span>⚡</span> Built in 1 Evening with Antigravity AI
+                </div>
+                <div style={{ fontSize: "12px", color: "var(--text-muted)", marginTop: "2px" }}>
+                  See how Himanshu paired with AI to ship this multiplayer game & supercharge backend velocity.
+                </div>
+              </div>
+              <Link
+                href="/ai"
+                className="btn btn-black btn-sm"
+                style={{ textDecoration: "none", whiteSpace: "nowrap", padding: "8px 16px", fontSize: "12px" }}
+              >
+                View AI Showcase ➔
+              </Link>
+            </div>
           </div>
         </main>
+
+        <footer style={{ marginTop: "auto", padding: "20px 0", textAlign: "center", borderTop: "1px solid var(--card-border)" }}>
+          <div style={{ fontSize: "12px", color: "var(--text-muted)" }}>
+            Crafted for Fun Friday by <strong>Himanshu Jain</strong> with <strong>Antigravity AI</strong> •{" "}
+            <Link href="/ai" style={{ color: "var(--brand-blue)", textDecoration: "none", fontWeight: 600 }}>
+              See How It Was Built ↗
+            </Link>
+          </div>
+        </footer>
       </div>
     );
   }
@@ -396,6 +452,20 @@ export default function Home() {
           </div>
 
           <div className="header-actions">
+            <Link
+              href="/ai"
+              className="header-btn"
+              style={{
+                background: "linear-gradient(135deg, rgba(72,113,197,0.12) 0%, rgba(188,0,112,0.12) 100%)",
+                border: "1px solid rgba(188,0,112,0.25)",
+                color: "var(--brand-pink)",
+                fontWeight: 700,
+                textDecoration: "none",
+              }}
+            >
+              ⚡ How AI Built This
+            </Link>
+
             {/* Sound Mute/Unmute Toggle */}
             <button
               className="header-btn"
@@ -961,6 +1031,15 @@ export default function Home() {
           </div>
         )}
       </main>
+
+      <footer style={{ marginTop: "auto", padding: "20px 0", textAlign: "center", borderTop: "1px solid var(--card-border)" }}>
+        <div style={{ fontSize: "12px", color: "var(--text-muted)" }}>
+          Crafted for Fun Friday by <strong>Himanshu Jain</strong> with <strong>Antigravity AI</strong> •{" "}
+          <Link href="/ai" style={{ color: "var(--brand-blue)", textDecoration: "none", fontWeight: 600 }}>
+            See How It Was Built ↗
+          </Link>
+        </div>
+      </footer>
     </div>
   );
 }
