@@ -392,11 +392,18 @@ export default function Home() {
         </main>
 
         <footer style={{ marginTop: "auto", padding: "20px 0", textAlign: "center", borderTop: "1px solid var(--card-border)" }}>
-          <div style={{ fontSize: "12px", color: "var(--text-muted)" }}>
-            Crafted for Fun Friday by <strong>Himanshu Jain</strong> with <strong>Antigravity AI</strong> •{" "}
-            <Link href="/ai" style={{ color: "var(--brand-blue)", textDecoration: "none", fontWeight: 600 }}>
-              See How It Was Built ↗
-            </Link>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", fontSize: "12px", color: "var(--text-muted)" }}>
+            <img
+              src="https://github.com/himanshujainpro.png"
+              alt="Himanshu"
+              style={{ width: "20px", height: "20px", borderRadius: "50%", objectFit: "cover" }}
+            />
+            <span>
+              Crafted for Fun Friday by <strong>Himanshu Jain</strong> with <strong>Antigravity AI</strong> •{" "}
+              <Link href="/ai" style={{ color: "var(--brand-blue)", textDecoration: "none", fontWeight: 600 }}>
+                See How It Was Built ↗
+              </Link>
+            </span>
           </div>
         </footer>
       </div>
@@ -1033,11 +1040,18 @@ export default function Home() {
       </main>
 
       <footer style={{ marginTop: "auto", padding: "20px 0", textAlign: "center", borderTop: "1px solid var(--card-border)" }}>
-        <div style={{ fontSize: "12px", color: "var(--text-muted)" }}>
-          Crafted for Fun Friday by <strong>Himanshu Jain</strong> with <strong>Antigravity AI</strong> •{" "}
-          <Link href="/ai" style={{ color: "var(--brand-blue)", textDecoration: "none", fontWeight: 600 }}>
-            See How It Was Built ↗
-          </Link>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", fontSize: "12px", color: "var(--text-muted)" }}>
+          <img
+            src="https://github.com/himanshujainpro.png"
+            alt="Himanshu"
+            style={{ width: "20px", height: "20px", borderRadius: "50%", objectFit: "cover" }}
+          />
+          <span>
+            Crafted for Fun Friday by <strong>Himanshu Jain</strong> with <strong>Antigravity AI</strong> •{" "}
+            <Link href="/ai" style={{ color: "var(--brand-blue)", textDecoration: "none", fontWeight: 600 }}>
+              See How It Was Built ↗
+            </Link>
+          </span>
         </div>
       </footer>
     </div>

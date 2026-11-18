@@ -16,7 +16,7 @@ function ScansLogo() {
 
 export default function AIShowcasePage() {
   const [activeTab, setActiveTab] = useState("quick"); // "quick" | "deep"
-  const [deepSection, setDeepSection] = useState("secret-santa"); // "secret-santa" | "carscan" | "maturity"
+  const [deepSection, setDeepSection] = useState("secret-santa"); // "secret-santa" | "carscan" | "maturity" | "playbook"
 
   return (
     <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", background: "var(--bg-color)" }}>
@@ -98,7 +98,7 @@ export default function AIShowcasePage() {
               className="card"
               style={{
                 textAlign: "center",
-                padding: "48px 24px 36px",
+                padding: "44px 24px 36px",
                 marginBottom: "32px",
                 position: "relative",
                 overflow: "hidden",
@@ -106,24 +106,40 @@ export default function AIShowcasePage() {
                 background: "linear-gradient(180deg, rgba(72,113,197,0.04) 0%, rgba(188,0,112,0.02) 100%, #ffffff 100%)",
               }}
             >
-              <div
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: "8px",
-                  padding: "6px 14px",
-                  borderRadius: "100px",
-                  background: "rgba(188,0,112,0.08)",
-                  border: "1px solid rgba(188,0,112,0.2)",
-                  color: "var(--brand-pink)",
-                  fontSize: "12px",
-                  fontWeight: 700,
-                  textTransform: "uppercase",
-                  letterSpacing: "0.05em",
-                  marginBottom: "16px",
-                }}
-              >
-                <span>🚀 Fun Friday Special Presentation</span>
+              {/* Himanshu Creator Badge */}
+              <div style={{ display: "flex", justifyContent: "center", marginBottom: "16px" }}>
+                <div
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "10px",
+                    padding: "6px 16px",
+                    borderRadius: "100px",
+                    background: "#ffffff",
+                    border: "1px solid var(--card-border)",
+                    boxShadow: "0 2px 10px rgba(0,0,0,0.04)",
+                  }}
+                >
+                  <img
+                    src="https://github.com/himanshujainpro.png"
+                    alt="Himanshu Jain"
+                    style={{ width: "26px", height: "26px", borderRadius: "50%", objectFit: "cover" }}
+                  />
+                  <span style={{ fontSize: "13px", fontWeight: 700, color: "var(--text-main)" }}>
+                    Himanshu Jain
+                  </span>
+                  <span
+                    style={{
+                      fontSize: "12px",
+                      color: "var(--brand-pink)",
+                      fontWeight: 600,
+                      borderLeft: "1px solid var(--card-border)",
+                      paddingLeft: "10px",
+                    }}
+                  >
+                    AI-Native Software Architect
+                  </span>
+                </div>
               </div>
 
               <h1
@@ -158,8 +174,8 @@ export default function AIShowcasePage() {
                   lineHeight: 1.6,
                 }}
               >
-                How Himanshu uses autonomous AI pairing to turn ideas into full-stack production apps
-                and bulletproof backend microservices at <strong>10x developer velocity</strong>.
+                How I pair with autonomous AI agents to turn ideas into live production software
+                and bulletproof microservices at <strong>10x developer velocity</strong>—and how you can do it too.
               </p>
 
               {/* Big Metric Strip */}
@@ -514,6 +530,168 @@ export default function AIShowcasePage() {
               </div>
             </div>
 
+            {/* BRANDING SECTION 1: How I Improve Daily & The Compounding Flywheel */}
+            <div
+              className="card"
+              style={{
+                padding: "32px 24px",
+                marginBottom: "36px",
+                background: "linear-gradient(180deg, #ffffff 0%, rgba(72,113,197,0.03) 100%)",
+                border: "1px solid rgba(72,113,197,0.2)",
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "20px" }}>
+                <span className="event-badge" style={{ background: "var(--brand-gradient)", color: "#fff", border: "none" }}>
+                  📈 Continuous Evolution
+                </span>
+                <h3 style={{ fontSize: "20px", fontWeight: 800, color: "var(--text-main)" }}>
+                  How I Am Improving Daily (The 1% Compounding Loop)
+                </h3>
+              </div>
+
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
+                  gap: "16px",
+                }}
+              >
+                <div style={{ background: "var(--chip-bg)", padding: "18px", borderRadius: "12px" }}>
+                  <div style={{ fontSize: "13px", fontWeight: 700, color: "var(--brand-blue)" }}>
+                    1. Zero Repeated Mistakes
+                  </div>
+                  <div style={{ fontSize: "13px", color: "var(--text-muted)", marginTop: "6px" }}>
+                    Whenever a PR review or edge case comes up, I don't just fix it—I run <code>/learn</code> to codify it into <code>AGENTS.md</code> or <code>.greptile/rules.md</code> so my AI co-pilot prevents it permanently.
+                  </div>
+                </div>
+
+                <div style={{ background: "var(--chip-bg)", padding: "18px", borderRadius: "12px" }}>
+                  <div style={{ fontSize: "13px", fontWeight: 700, color: "var(--brand-pink)" }}>
+                    2. Tool Building Over Prompt Tweaking
+                  </div>
+                  <div style={{ fontSize: "13px", color: "var(--text-muted)", marginTop: "6px" }}>
+                    Instead of repeatedly typing long prompts, I build reusable <strong>Antigravity Skills</strong> (like <code>carscan-fast-test</code> and <code>sqs-pipeline-navigator</code>) that automate entire developer workflows.
+                  </div>
+                </div>
+
+                <div style={{ background: "var(--chip-bg)", padding: "18px", borderRadius: "12px" }}>
+                  <div style={{ fontSize: "13px", fontWeight: 700, color: "var(--success)" }}>
+                    3. Tracking My AI Velocity Ledger
+                  </div>
+                  <div style={{ fontSize: "13px", color: "var(--text-muted)", marginTop: "6px" }}>
+                    I track daily diffs, hours saved, and subagent review accuracy. This constant measurement pushes me to move from Level 1 assistance to Level 4 autonomous orchestration.
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* BRANDING SECTION 2: How Others (The Team) Can Do It Too */}
+            <div
+              className="card"
+              style={{
+                padding: "32px 24px",
+                marginBottom: "36px",
+                border: "2px solid rgba(188,0,112,0.2)",
+                background: "linear-gradient(135deg, rgba(72,113,197,0.05) 0%, rgba(188,0,112,0.05) 100%, #ffffff 100%)",
+              }}
+            >
+              <div style={{ textAlign: "center", marginBottom: "24px" }}>
+                <span className="event-badge" style={{ marginBottom: "8px", display: "inline-block" }}>
+                  🚀 The Team Playbook
+                </span>
+                <h3 style={{ fontSize: "22px", fontWeight: 800, color: "var(--text-main)" }}>
+                  How YOU Can Do It Too: 3 Steps to 10x Velocity
+                </h3>
+                <p style={{ color: "var(--text-muted)", fontSize: "14px", maxWidth: "600px", margin: "4px auto 0" }}>
+                  AI isn't about replacing engineers—it's about removing cognitive friction so we can build bigger, bolder, and faster.
+                </p>
+              </div>
+
+              <div style={{ display: "flex", flexDirection: "column", gap: "16px", marginBottom: "24px" }}>
+                <div style={{ display: "flex", gap: "16px", alignItems: "flex-start", background: "#fff", padding: "16px", borderRadius: "12px", border: "1px solid var(--card-border)" }}>
+                  <div style={{ width: "32px", height: "32px", borderRadius: "8px", background: "var(--chip-bg)", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800, color: "var(--brand-blue)" }}>
+                    01
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontWeight: 700, fontSize: "15px", color: "var(--text-main)" }}>
+                      Stop Asking Questions — Start Providing Deep Architecture Context
+                    </div>
+                    <div style={{ fontSize: "13px", color: "var(--text-muted)", marginTop: "4px" }}>
+                      Don't treat AI like Google search. Feed it your repository conventions, typed exceptions, and database models. Let it know the exact boundaries before asking it to write a single method.
+                    </div>
+                  </div>
+                </div>
+
+                <div style={{ display: "flex", gap: "16px", alignItems: "flex-start", background: "#fff", padding: "16px", borderRadius: "12px", border: "1px solid var(--card-border)" }}>
+                  <div style={{ width: "32px", height: "32px", borderRadius: "8px", background: "var(--chip-bg)", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800, color: "var(--brand-pink)" }}>
+                    02
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontWeight: 700, fontSize: "15px", color: "var(--text-main)" }}>
+                      Automate Your Single Most Annoying Task First
+                    </div>
+                    <div style={{ fontSize: "13px", color: "var(--text-muted)", marginTop: "4px" }}>
+                      Hate writing Mockito assertions? Hate tracing SQS consumer queues? Build a single focused script or skill that does it in 5 seconds. Once you win that back, expand to the next workflow.
+                    </div>
+                  </div>
+                </div>
+
+                <div style={{ display: "flex", gap: "16px", alignItems: "flex-start", background: "#fff", padding: "16px", borderRadius: "12px", border: "1px solid var(--card-border)" }}>
+                  <div style={{ width: "32px", height: "32px", borderRadius: "8px", background: "var(--chip-bg)", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800, color: "var(--success)" }}>
+                    03
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontWeight: 700, fontSize: "15px", color: "var(--text-main)" }}>
+                      Never Trust Single-Shot Code: Use Maker-Checker Subagents
+                    </div>
+                    <div style={{ fontSize: "13px", color: "var(--text-muted)", marginTop: "4px" }}>
+                      Always spin up a secondary adversarial agent whose only job is to find what the first agent missed. This catches null pointers, missed tenant filters, and edge cases before PR review.
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Personal Connect Callout */}
+              <div
+                style={{
+                  background: "#ffffff",
+                  padding: "20px",
+                  borderRadius: "14px",
+                  border: "1px solid rgba(72,113,197,0.2)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  flexWrap: "wrap",
+                  gap: "16px",
+                }}
+              >
+                <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
+                  <img
+                    src="https://github.com/himanshujainpro.png"
+                    alt="Himanshu"
+                    style={{ width: "48px", height: "48px", borderRadius: "50%", border: "2px solid var(--brand-pink)" }}
+                  />
+                  <div>
+                    <div style={{ fontWeight: 800, fontSize: "15px", color: "var(--text-main)" }}>
+                      Want to set up AI pairing for your service?
+                    </div>
+                    <div style={{ fontSize: "13px", color: "var(--text-muted)" }}>
+                      Ping Himanshu on Slack or GitHub—happy to run a hands-on pairing session with anyone on the team!
+                    </div>
+                  </div>
+                </div>
+                <a
+                  href="https://github.com/himanshujainpro"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn btn-black btn-sm"
+                  style={{ textDecoration: "none", whiteSpace: "nowrap" }}
+                >
+                  Connect on GitHub ↗
+                </a>
+              </div>
+            </div>
+
             {/* Bottom Call to Action for Detailed Version */}
             <div
               style={{
@@ -525,7 +703,7 @@ export default function AIShowcasePage() {
               }}
             >
               <h3 style={{ fontSize: "20px", fontWeight: 800, color: "var(--text-main)", marginBottom: "8px" }}>
-                Curious About the CarScan Backend AI Arsenal?
+                Curious About the Technical Architecture?
               </h3>
               <p style={{ color: "var(--text-muted)", fontSize: "14px", maxWidth: "600px", margin: "0 auto 20px" }}>
                 Discover how Antigravity enforces Spring Boot microservice boundaries, executes scoped JUnit 5 test runs in seconds, and navigates SQS event-driven pipelines.
@@ -597,6 +775,21 @@ export default function AIShowcasePage() {
                 }}
               >
                 3. The 5-Level AI Maturity Model
+              </button>
+
+              <button
+                onClick={() => setDeepSection("playbook")}
+                className={`header-btn ${deepSection === "playbook" ? "btn-black" : ""}`}
+                style={{
+                  background: deepSection === "playbook" ? "var(--primary-black)" : "#fff",
+                  color: deepSection === "playbook" ? "#fff" : "var(--text-main)",
+                  fontWeight: 600,
+                  fontSize: "13px",
+                  padding: "8px 16px",
+                  borderRadius: "8px",
+                }}
+              >
+                4. Himanshu's Team AI Playbook
               </button>
             </div>
 
@@ -838,6 +1031,78 @@ export default function AIShowcasePage() {
                 </div>
               </div>
             )}
+
+            {/* Subsection 4: Himanshu's Team AI Playbook */}
+            {deepSection === "playbook" && (
+              <div className="card" style={{ padding: "32px 24px" }}>
+                <span className="event-badge" style={{ marginBottom: "12px", display: "inline-block" }}>
+                  Engineering Culture
+                </span>
+                <h2 style={{ fontSize: "24px", fontWeight: 800, marginBottom: "8px" }}>
+                  Himanshu's AI Playbook: How the Whole Team Wins
+                </h2>
+                <p style={{ color: "var(--text-muted)", fontSize: "14px", marginBottom: "24px" }}>
+                  The exact daily routine and operational principles to turn AI into a permanent engineering multiplier.
+                </p>
+
+                <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+                  <div style={{ background: "var(--chip-bg)", padding: "20px", borderRadius: "12px" }}>
+                    <div style={{ fontWeight: 800, fontSize: "16px", color: "var(--brand-blue)", marginBottom: "8px" }}>
+                      1. The Daily Operational Routine
+                    </div>
+                    <ul style={{ paddingLeft: "20px", fontSize: "13px", color: "var(--text-muted)", lineHeight: 1.8 }}>
+                      <li><strong>Morning Kickoff:</strong> Scope requirements, trace dependencies using the knowledge graph, and define testing gates.</li>
+                      <li><strong>Scaffolding & Execution:</strong> Use domain skills (`carscan-junit-scaffold`) to generate strictly typed implementations adhering to `AGENTS.md`.</li>
+                      <li><strong>Pre-Flight Review:</strong> Run `carscan-dual-review`—an adversarial agent audits the diff before opening a pull request.</li>
+                      <li><strong>End-of-Day Compounding:</strong> Run `/learn` on any unexpected gotchas to turn them into permanent repository rules.</li>
+                    </ul>
+                  </div>
+
+                  <div style={{ background: "var(--chip-bg)", padding: "20px", borderRadius: "12px" }}>
+                    <div style={{ fontWeight: 800, fontSize: "16px", color: "var(--brand-pink)", marginBottom: "8px" }}>
+                      2. Principles of an AI-Native Engineer
+                    </div>
+                    <div style={{ fontSize: "13px", color: "var(--text-muted)", lineHeight: 1.7 }}>
+                      • <strong>Architect First:</strong> AI doesn't know your business domain or architectural boundaries unless you define them.<br />
+                      • <strong>Deterministic Gates:</strong> Never trust vibes. Always back AI-generated code with automated unit tests and fast test suites.<br />
+                      • <strong>Share the Tools:</strong> Every custom script or prompt pattern should be converted into a shared team skill.
+                    </div>
+                  </div>
+
+                  <div
+                    style={{
+                      background: "linear-gradient(135deg, rgba(72,113,197,0.12) 0%, rgba(188,0,112,0.12) 100%)",
+                      padding: "24px",
+                      borderRadius: "14px",
+                      border: "1px solid rgba(188,0,112,0.3)",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      flexWrap: "wrap",
+                      gap: "16px",
+                    }}
+                  >
+                    <div>
+                      <div style={{ fontSize: "16px", fontWeight: 800, color: "var(--text-main)" }}>
+                        Let's Pair Up!
+                      </div>
+                      <div style={{ fontSize: "13px", color: "var(--text-muted)", marginTop: "4px" }}>
+                        I'm hosting pairing sessions for anyone on the team who wants to set up Antigravity, custom skills, or automated testing. Reach out anytime!
+                      </div>
+                    </div>
+                    <a
+                      href="https://github.com/himanshujainpro"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="btn btn-black btn-md"
+                      style={{ textDecoration: "none", whiteSpace: "nowrap" }}
+                    >
+                      Connect with Himanshu ↗
+                    </a>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         )}
       </main>
@@ -851,12 +1116,19 @@ export default function AIShowcasePage() {
           background: "#fff",
         }}
       >
-        <div style={{ fontSize: "13px", color: "var(--text-muted)" }}>
-          Crafted for <strong>Fun Friday</strong> by <strong>Himanshu Jain</strong> with{" "}
-          <strong style={{ color: "var(--brand-pink)" }}>Antigravity AI</strong> •{" "}
-          <Link href="/" style={{ color: "var(--brand-blue)", textDecoration: "none", fontWeight: 600 }}>
-            Play Secret Santa 🎁
-          </Link>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", fontSize: "13px", color: "var(--text-muted)" }}>
+          <img
+            src="https://github.com/himanshujainpro.png"
+            alt="Himanshu"
+            style={{ width: "20px", height: "20px", borderRadius: "50%" }}
+          />
+          <span>
+            Crafted for <strong>Fun Friday</strong> by <strong>Himanshu Jain</strong> with{" "}
+            <strong style={{ color: "var(--brand-pink)" }}>Antigravity AI</strong> •{" "}
+            <Link href="/" style={{ color: "var(--brand-blue)", textDecoration: "none", fontWeight: 600 }}>
+              Play Secret Santa 🎁
+            </Link>
+          </span>
         </div>
       </footer>
     </div>
