@@ -761,66 +761,68 @@ export default function Home() {
                 </button>
               </div>
             ) : (
-              <div style={{ background: "#F0FDF4", border: "1px solid #BBF7D0", borderRadius: "16px", padding: "16px", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "12px" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                  <span style={{ fontSize: "24px" }}>🎉</span>
-                  <div>
-                    <div style={{ fontWeight: 700, color: "#166534", fontSize: "15px" }}>You're in the game!</div>
-                    <div style={{ fontSize: "13px", color: "#15803D" }}>Waiting for the organizer to draw matches.</div>
+              <>
+                <div style={{ background: "#F0FDF4", border: "1px solid #BBF7D0", borderRadius: "16px", padding: "16px", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "12px" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                    <span style={{ fontSize: "24px" }}>🎉</span>
+                    <div>
+                      <div style={{ fontWeight: 700, color: "#166534", fontSize: "15px" }}>You're in the game!</div>
+                      <div style={{ fontSize: "13px", color: "#15803D" }}>Waiting for the organizer to draw matches.</div>
+                    </div>
                   </div>
+
+                  <button
+                    onClick={() => {
+                      if (confirm("Leave the lobby? You won't be included in the secret draw.")) {
+                        act("leave");
+                      }
+                    }}
+                    disabled={isActing}
+                    className="btn btn-danger-outline btn-sm"
+                  >
+                    Leave Lobby
+                  </button>
                 </div>
 
-                <button
-                  onClick={() => {
-                    if (confirm("Leave the lobby? You won't be included in the secret draw.")) {
-                      act("leave");
-                    }
+                {/* While You Wait AI Story Hook */}
+                <div
+                  style={{
+                    marginTop: "14px",
+                    padding: "16px 18px",
+                    background: "linear-gradient(135deg, rgba(72,113,197,0.08) 0%, rgba(188,0,112,0.08) 100%)",
+                    borderRadius: "14px",
+                    border: "1px solid rgba(188,0,112,0.22)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    flexWrap: "wrap",
+                    gap: "12px",
                   }}
-                  disabled={isActing}
-                  className="btn btn-danger-outline btn-sm"
                 >
-                  Leave Lobby
-                </button>
-              </div>
-
-              {/* While You Wait AI Story Hook */}
-              <div
-                style={{
-                  marginTop: "14px",
-                  padding: "16px 18px",
-                  background: "linear-gradient(135deg, rgba(72,113,197,0.08) 0%, rgba(188,0,112,0.08) 100%)",
-                  borderRadius: "14px",
-                  border: "1px solid rgba(188,0,112,0.22)",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  flexWrap: "wrap",
-                  gap: "12px",
-                }}
-              >
-                <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                  <span style={{ fontSize: "24px" }}>⚡</span>
-                  <div>
-                    <div style={{ fontWeight: 800, fontSize: "14px", color: "var(--text-main)" }}>
-                      {me.isAiInsider
-                        ? "🌟 You unlocked the [⚡ AI Insider] Badge!"
-                        : "🎁 While you wait: Unlock your [⚡ AI Insider] Badge!"}
-                    </div>
-                    <div style={{ fontSize: "12px", color: "var(--text-muted)", marginTop: "2px" }}>
-                      {me.isAiInsider
-                        ? "Test the Web Audio synthesizer lab, reactions, and CarScan architecture."
-                        : "Read how this game was coded in 1 evening with Antigravity AI to claim your badge."}
+                  <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                    <span style={{ fontSize: "24px" }}>⚡</span>
+                    <div>
+                      <div style={{ fontWeight: 800, fontSize: "14px", color: "var(--text-main)" }}>
+                        {me.isAiInsider
+                          ? "🌟 You unlocked the [⚡ AI Insider] Badge!"
+                          : "🎁 While you wait: Unlock your [⚡ AI Insider] Badge!"}
+                      </div>
+                      <div style={{ fontSize: "12px", color: "var(--text-muted)", marginTop: "2px" }}>
+                        {me.isAiInsider
+                          ? "Test the Web Audio synthesizer lab, reactions, and CarScan architecture."
+                          : "Read how this game was coded in 1 evening with Antigravity AI to claim your badge."}
+                      </div>
                     </div>
                   </div>
+                  <Link
+                    href="/ai"
+                    className="btn btn-black btn-sm"
+                    style={{ textDecoration: "none", whiteSpace: "nowrap", padding: "8px 16px", fontSize: "12px" }}
+                  >
+                    {me.isAiInsider ? "Revisit AI Hub ➔" : "Read & Claim Badge ➔"}
+                  </Link>
                 </div>
-                <Link
-                  href="/ai"
-                  className="btn btn-black btn-sm"
-                  style={{ textDecoration: "none", whiteSpace: "nowrap", padding: "8px 16px", fontSize: "12px" }}
-                >
-                  {me.isAiInsider ? "Revisit AI Hub ➔" : "Read & Claim Badge ➔"}
-                </Link>
-              </div>
+              </>
             )}
           </div>
         )}
