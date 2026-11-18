@@ -4,6 +4,8 @@ import { signIn, signOut } from "next-auth/react";
 import Link from "next/link";
 import { sounds, triggerGiftRain, triggerFlowerRain } from "@/lib/effects";
 
+export const dynamic = "force-dynamic";
+
 const PITCH_DURATION = 90;
 
 const IDEA_SPARKS = [
@@ -362,7 +364,7 @@ export default function Home() {
                 }}
               >
                 <span>🎀</span>
-                <span>Grand Opening & Ribbon Cutting</span>
+                <span>Grand Opening &amp; Ribbon Cutting</span>
               </span>
             </div>
             <h1 className="hero-title">Virtual Secret Santa</h1>
@@ -616,7 +618,7 @@ export default function Home() {
               <p className="inauguration-tagline">
                 दुकान का फीता कटने की प्रतीक्षा हो रही है! (Awaiting Chief Guest Ribbon Cutting).
                 <br />
-                Meanwhile, shower flowers, give your blessings & claim your VIP Pass!
+                Meanwhile, shower flowers, give your blessings &amp; claim your VIP Pass!
               </p>
 
               {/* Interactive Live Flower Shower & Counter */}
@@ -656,7 +658,7 @@ export default function Home() {
                     className="btn btn-black btn-lg"
                     style={{ width: "100%", maxWidth: "340px", background: "#FFFFFF", color: "#000000" }}
                   >
-                    🎟️ Join & Claim VIP Pass as {me.name}
+                    🎟️ Join &amp; Claim VIP Pass as {me.name}
                   </button>
                 ) : (
                   <div
@@ -697,10 +699,10 @@ export default function Home() {
                       disabled={isActing || isUnveiling}
                       className="btn-scissors-inaugurate"
                     >
-                      ✂️ Cut Ribbon & Inaugurate (फीता काटें!)
+                      ✂️ Cut Ribbon &amp; Inaugurate (फीता काटें!)
                     </button>
                     <div style={{ fontSize: "12px", color: "#FDE68A", marginTop: "8px", opacity: 0.8 }}>
-                      Clicking will snip the ribbon, open curtains with Shehnai fanfare & unveil the game to everyone!
+                      Clicking will snip the ribbon, open curtains with Shehnai fanfare &amp; unveil the game to everyone!
                     </div>
                   </div>
                 ) : (
@@ -717,7 +719,7 @@ export default function Home() {
                   className="btn btn-outline btn-sm"
                   style={{ borderColor: "rgba(255,255,255,0.3)", color: "#FFFFFF" }}
                 >
-                  📖 Rules & How to Play
+                  📖 Rules &amp; How to Play
                 </button>
                 <Link
                   href="/ai"
