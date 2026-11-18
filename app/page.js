@@ -423,7 +423,7 @@ export default function Home() {
                 3. The Random Presenter Twist!
               </div>
               <div style={{ fontSize: "13px", color: "var(--text-muted)" }}>
-                When a pitch begins, the app randomly selects a colleague (the Bakra!) to turn on their mic and dramatically pitch the gift note like a TV salesperson!
+                When a pitch begins, the app randomly selects a colleague (the chosen presenter) to turn on their mic and dramatically pitch the gift note like a TV salesperson!
               </div>
             </div>
           </div>
@@ -762,10 +762,10 @@ export default function Home() {
                         disabled={isActing || isUnveiling}
                         className="btn-scissors-cut"
                       >
-                        ✂️ Cut the Ribbon &amp; Inaugurate (माननीय मुख्य अतिथि, फीता काटें!)
+                        ✂️ Cut the Ribbon &amp; Inaugurate (Chief Guest)
                       </button>
                       <div style={{ fontSize: "12px", color: "#FDE68A", opacity: 0.85, marginTop: "8px" }}>
-                        As our Chief Guest, snipping the ribbon will inaugurate the event with Shehnai fanfare for everyone!
+                        As our Chief Guest, snipping the ribbon will inaugurate the event with royal fanfare for everyone!
                       </div>
                     </div>
                   ) : me.host ? (
@@ -813,7 +813,7 @@ export default function Home() {
                   ) : (
                     <div style={{ display: "inline-flex", alignItems: "center", gap: "8px", background: "rgba(245, 158, 11, 0.15)", border: "1px solid rgba(245, 158, 11, 0.4)", padding: "10px 20px", borderRadius: "9999px", color: "#FDE68A", fontSize: "14px", fontWeight: 700 }}>
                       <span>🤫</span>
-                      <span>Mystery Chief Guest being revealed soon... Dil thaam ke baithiye! 🪑</span>
+                      <span>Mystery Chief Guest will be revealed soon... Stay tuned! 🌟</span>
                     </div>
                   )
                 ) : me.host ? (
@@ -832,13 +832,13 @@ export default function Home() {
                       disabled={isActing || isUnveiling}
                       className="btn-scissors-cut"
                     >
-                      ✂️ Cut the Ribbon &amp; Inaugurate (फीता काटें!)
+                      ✂️ Cut the Ribbon &amp; Inaugurate
                     </button>
                   </div>
                 ) : (
                   <div style={{ display: "inline-flex", alignItems: "center", gap: "8px", background: "rgba(245, 158, 11, 0.15)", border: "1px solid rgba(245, 158, 11, 0.4)", padding: "10px 20px", borderRadius: "9999px", color: "#FDE68A", fontSize: "14px", fontWeight: 700 }}>
                     <span>⏳</span>
-                    <span>Awaiting Chief Guest (Organizer) to cut the ceremonial ribbon... Dil thaam ke baithiye! 🪑</span>
+                    <span>Awaiting Chief Guest / Organizer to cut the ceremonial ribbon... Stay tuned! 🎀</span>
                   </div>
                 )}
               </div>
@@ -847,14 +847,14 @@ export default function Home() {
             {/* Inner Content Card (Interactive Banner, Flower shower & VIP check-in) */}
             <div className="stage-inner-card">
               <div className="inauguration-badge">
-                <span>🎉</span> GRAND OPENING • भव्य उद्घाटन
+                <span>🎉</span> GRAND INAUGURATION
               </div>
 
               {/* Chief Guest Spotlight or Mystery Card */}
               {d.chiefGuest?.revealed ? (
                 <div className="chief-guest-spotlight-card">
                   <div className="cg-spotlight-badge">
-                    <span>👑</span> Honorable Chief Guest • मुख्य अतिथि
+                    <span>👑</span> Honorable Chief Guest
                   </div>
                   <div className="cg-avatar-wrapper">
                     <div className="cg-avatar-ring">
@@ -900,12 +900,12 @@ export default function Home() {
               ) : null}
 
               <h1 className="inauguration-title">
-                Secret Santa 2024 ki Grand Opening 🛍️
+                Secret Santa 2050 Grand Inauguration 🛍️
               </h1>
 
               <p className="inauguration-desc">
-                दुकान का फीता कटने की प्रतीक्षा हो रही है! (Awaiting Ribbon Cutting Ceremony).<br />
-                Meanwhile, shower flowers &amp; dev tools, give your blessings &amp; claim your VIP Pass!
+                Awaiting the ceremonial ribbon cutting ceremony!<br />
+                Meanwhile, shower developer tools, show your support &amp; claim your VIP Pass!
               </p>
 
               {/* Interactive Live Flower & Dev Stack Shower */}
@@ -915,12 +915,12 @@ export default function Home() {
                   disabled={isActing}
                   className="btn-flower-shower"
                 >
-                  ⚡ Shower Tech &amp; Flowers (पुष्प व टेक वर्षा) ✨
+                  ⚡ Shower Developer Tools (Dev Storm) ✨
                 </button>
                 <div>
                   <div className="flower-live-pill">
-                    <span>⚡🌸</span>
-                    <span>{d.flowerCount || 0} Tech Tokens &amp; Flowers Showered</span>
+                    <span>⚡🚀</span>
+                    <span>{d.flowerCount || 0} Tech Tool Badges Showered</span>
                   </div>
                 </div>
               </div>
