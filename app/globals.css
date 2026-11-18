@@ -893,3 +893,222 @@ textarea.text-input {
   color: var(--text-main);
   font-family: 'Sora', sans-serif;
 }
+
+/* -------------------------------------------------------------------------- */
+/* Grand Shop Inauguration & Ribbon Cutting Ceremony Styles                   */
+/* -------------------------------------------------------------------------- */
+
+.inauguration-stage {
+  position: relative;
+  overflow: hidden;
+  border-radius: 24px;
+  background: radial-gradient(circle at center, #2e0814 0%, #150208 100%);
+  border: 2px solid #F59E0B;
+  box-shadow: 0 25px 60px -15px rgba(188, 0, 112, 0.35);
+  margin-bottom: 24px;
+  min-height: 520px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  padding: 40px 24px;
+}
+
+/* Royal Velvet Curtains */
+.curtain-overlay-left, .curtain-overlay-right {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 50%;
+  z-index: 10;
+  background: repeating-linear-gradient(
+    90deg,
+    #70051e 0px,
+    #9f1239 25px,
+    #881337 40px,
+    #4c0519 65px
+  );
+  box-shadow: inset 0 0 50px rgba(0,0,0,0.7);
+  transition: transform 1.2s cubic-bezier(0.77, 0, 0.175, 1);
+  pointer-events: none;
+}
+
+.curtain-overlay-left {
+  left: 0;
+  border-right: 4px solid #F59E0B;
+}
+
+.curtain-overlay-right {
+  right: 0;
+  border-left: 4px solid #F59E0B;
+}
+
+.curtains-open .curtain-overlay-left {
+  transform: translateX(-100%);
+}
+
+.curtains-open .curtain-overlay-right {
+  transform: translateX(100%);
+}
+
+/* Ceremonial Red & Gold Ribbon */
+.ceremonial-ribbon-bar {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 48px;
+  transform: translateY(-50%);
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(180deg, #F59E0B 0%, #E11D48 25%, #BE123C 75%, #F59E0B 100%);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.5), inset 0 2px 4px rgba(255,255,255,0.4);
+  transition: all 0.8s ease;
+}
+
+.ceremonial-ribbon-bar.is-cut {
+  opacity: 0;
+  transform: translateY(-50%) scaleX(0);
+  pointer-events: none;
+}
+
+.ceremonial-bow-center {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #FDE68A 0%, #D97706 70%, #78350F 100%);
+  border: 3px solid #FFFBEB;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 36px;
+  box-shadow: 0 0 25px rgba(245, 158, 11, 0.8);
+  animation: bowGlow 2s infinite alternate ease-in-out;
+}
+
+@keyframes bowGlow {
+  from { transform: scale(1); box-shadow: 0 0 15px rgba(245, 158, 11, 0.6); }
+  to { transform: scale(1.08); box-shadow: 0 0 35px rgba(245, 158, 11, 1); }
+}
+
+/* Inauguration Content Card */
+.inauguration-card-body {
+  position: relative;
+  z-index: 5;
+  max-width: 540px;
+  width: 100%;
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1.5px solid rgba(251, 191, 36, 0.4);
+  border-radius: 20px;
+  padding: 32px 24px;
+  text-align: center;
+  box-shadow: 0 20px 50px rgba(0,0,0,0.6);
+}
+
+.inauguration-title {
+  font-size: 28px;
+  font-weight: 800;
+  font-family: 'Sora', sans-serif;
+  color: #FFF;
+  margin: 12px 0 6px;
+  text-shadow: 0 2px 10px rgba(0,0,0,0.5);
+  background: linear-gradient(135deg, #FDE68A 0%, #F59E0B 50%, #FDA4AF 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.inauguration-tagline {
+  font-size: 14px;
+  color: #E2E8F0;
+  margin-bottom: 24px;
+  line-height: 1.5;
+}
+
+/* Scissors Chief Guest Button */
+.btn-scissors-inaugurate {
+  background: linear-gradient(135deg, #F59E0B 0%, #D97706 50%, #B45309 100%);
+  color: #000;
+  font-family: 'Sora', sans-serif;
+  font-weight: 800;
+  font-size: 16px;
+  padding: 16px 32px;
+  border-radius: 9999px;
+  border: 2px solid #FEF3C7;
+  cursor: pointer;
+  box-shadow: 0 0 30px rgba(245, 158, 11, 0.7);
+  transition: all 0.25s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  animation: scissorPulse 1.8s infinite ease-in-out;
+}
+
+@keyframes scissorPulse {
+  0%, 100% { transform: scale(1); box-shadow: 0 0 20px rgba(245, 158, 11, 0.6); }
+  50% { transform: scale(1.04); box-shadow: 0 0 40px rgba(245, 158, 11, 1); }
+}
+
+.btn-scissors-inaugurate:hover {
+  transform: scale(1.06) translateY(-2px);
+  background: linear-gradient(135deg, #FCD34D 0%, #F59E0B 100%);
+}
+
+/* Flower Shower Button */
+.btn-flower-shower {
+  background: linear-gradient(135deg, #E11D48 0%, #BE123C 100%);
+  color: #FFF;
+  font-family: 'Sora', sans-serif;
+  font-weight: 700;
+  font-size: 14px;
+  padding: 10px 22px;
+  border-radius: 9999px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s;
+  box-shadow: 0 4px 15px rgba(225, 29, 72, 0.4);
+}
+
+.btn-flower-shower:hover {
+  transform: translateY(-2px);
+  background: linear-gradient(135deg, #F43F5E 0%, #E11D48 100%);
+  box-shadow: 0 6px 20px rgba(225, 29, 72, 0.6);
+}
+
+/* Live Flower Counter Badge */
+.flower-live-counter {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(225, 29, 72, 0.18);
+  border: 1px solid rgba(251, 113, 133, 0.4);
+  padding: 6px 14px;
+  border-radius: 9999px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #FDA4AF;
+  font-family: 'Sora', sans-serif;
+  margin-top: 14px;
+}
+
+/* Teaser Ticker */
+.inauguration-ticker {
+  background: rgba(0, 0, 0, 0.4);
+  border-radius: 12px;
+  padding: 10px 16px;
+  font-size: 13px;
+  color: #FDE68A;
+  margin: 18px 0;
+  border: 1px dashed rgba(245, 158, 11, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}

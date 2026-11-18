@@ -2,7 +2,7 @@
 import { useEffect, useState, useCallback, useRef } from "react";
 import { signIn, signOut } from "next-auth/react";
 import Link from "next/link";
-import { sounds, triggerGiftRain } from "@/lib/effects";
+import { sounds, triggerGiftRain, triggerFlowerRain } from "@/lib/effects";
 
 const PITCH_DURATION = 90;
 
@@ -54,11 +54,13 @@ export default function Home() {
   const [errorMsg, setErrorMsg] = useState("");
   const [toastMsg, setToastMsg] = useState("");
   const [isActing, setIsActing] = useState(false);
+  const [isUnveiling, setIsUnveiling] = useState(false);
 
   // Refs to track state transitions across polling
   const prevRevealedRef = useRef(false);
   const prevResultsRef = useRef(null);
   const prevIdxRef = useRef(-1);
+  const prevInauguratedRef = useRef(null);
 
   const toggleSound = () => {
     const nextMuted = !isMuted;
@@ -112,6 +114,16 @@ export default function Home() {
         sounds.pop();
       }
       prevIdxRef.current = j.idx;
+
+      // Check if Inauguration ceremony just happened -> Trigger royal fanfare & flower rain
+      if (j.inaugurated && prevInauguratedRef.current === false) {
+        setIsUnveiling(true);
+        sounds.snip();
+        sounds.shehnaiInauguration();
+        triggerFlowerRain(true);
+        setTimeout(() => setIsUnveiling(false), 2400);
+      }
+      prevInauguratedRef.current = !!j.inaugurated;
 
       setD(j);
 
@@ -183,6 +195,23 @@ export default function Home() {
       triggerGiftRain();
     }
     setShowGiftee(!showGiftee);
+  };
+
+  const handleCutRibbon = async () => {
+    setIsUnveiling(true);
+    sounds.snip();
+    sounds.shehnaiInauguration();
+    triggerFlowerRain(true);
+    await act("inaugurate");
+    setTimeout(() => {
+      setIsUnveiling(false);
+    }, 2400);
+  };
+
+  const handleShowerFlowers = async () => {
+    sounds.flowerChime();
+    triggerFlowerRain(false);
+    await act("flower");
   };
 
   // ---------------------------------------------------------------------------
@@ -316,8 +345,25 @@ export default function Home() {
 
         <main className="container" style={{ display: "flex", flexDirection: "column", justifyContent: "center" }}>
           <div className="card hero-box">
-            <div style={{ display: "inline-flex", justifyContent: "center", marginBottom: "16px" }}>
+            <div style={{ display: "inline-flex", justifyContent: "center", marginBottom: "16px", gap: "8px", flexWrap: "wrap" }}>
               <span className="event-badge">🎁 Holiday Edition</span>
+              <span
+                style={{
+                  background: "linear-gradient(135deg, rgba(245,158,11,0.15) 0%, rgba(225,29,72,0.15) 100%)",
+                  border: "1px solid rgba(245,158,11,0.4)",
+                  color: "#B45309",
+                  padding: "4px 12px",
+                  borderRadius: "9999px",
+                  fontSize: "12px",
+                  fontWeight: 700,
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "6px",
+                }}
+              >
+                <span>🎀</span>
+                <span>Grand Opening & Ribbon Cutting</span>
+              </span>
             </div>
             <h1 className="hero-title">Virtual Secret Santa</h1>
             <p className="hero-subtitle">
@@ -531,8 +577,165 @@ export default function Home() {
         {/* Error Alert */}
         {errorMsg && <div className="alert-banner">⚠️ {errorMsg}</div>}
 
-        {/* Phase / Lobby Card with Join & Leave Options */}
-        {!drawn && (
+        {/* Grand Shop Inauguration & Ribbon Cutting Ceremony */}
+        {(!d.inaugurated || isUnveiling) && (
+          <div className={`inauguration-stage ${isUnveiling ? "curtains-open" : ""}`}>
+            {/* Royal Velvet Curtains */}
+            <div className="curtain-overlay-left" />
+            <div className="curtain-overlay-right" />
+
+            {/* Ceremonial Red & Gold Ribbon with Golden Bow */}
+            <div className={`ceremonial-ribbon-bar ${isUnveiling ? "is-cut" : ""}`}>
+              <div className="ceremonial-bow-center">🎀</div>
+            </div>
+
+            {/* Center Content Card */}
+            <div className="inauguration-card-body">
+              <div style={{ display: "inline-flex", alignItems: "center", gap: "8px", marginBottom: "8px" }}>
+                <span
+                  style={{
+                    background: "rgba(245, 158, 11, 0.2)",
+                    border: "1px solid rgba(245, 158, 11, 0.5)",
+                    color: "#FDE68A",
+                    padding: "4px 12px",
+                    borderRadius: "9999px",
+                    fontSize: "12px",
+                    fontWeight: 700,
+                    letterSpacing: "0.06em",
+                    textTransform: "uppercase",
+                  }}
+                >
+                  🎉 GRAND OPENING • भव्य उद्घाटन
+                </span>
+              </div>
+
+              <h1 className="inauguration-title">
+                Secret Santa 2024 ki Grand Opening 🛍️
+              </h1>
+
+              <p className="inauguration-tagline">
+                दुकान का फीता कटने की प्रतीक्षा हो रही है! (Awaiting Chief Guest Ribbon Cutting).
+                <br />
+                Meanwhile, shower flowers, give your blessings & claim your VIP Pass!
+              </p>
+
+              {/* Interactive Live Flower Shower & Counter */}
+              <div style={{ margin: "20px 0" }}>
+                <button
+                  onClick={handleShowerFlowers}
+                  disabled={isActing}
+                  className="btn-flower-shower"
+                >
+                  🌸 Shower Flowers (पुष्प वर्षा करें) ✨
+                </button>
+                <div>
+                  <div className="flower-live-counter">
+                    <span>🌸</span>
+                    <span>{d.flowerCount || 0} Flowers Showered by Scans.ai Team</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Live Ticker for Colleagues waiting */}
+              <div className="inauguration-ticker">
+                <span>👥</span>
+                <span>
+                  <strong>{d.players.length} Colleagues</strong> checked in and waiting in suspense...
+                </span>
+              </div>
+
+              {/* Guest Check-in / VIP Entry status */}
+              <div style={{ marginTop: "16px" }}>
+                {!me.joined ? (
+                  <button
+                    onClick={() => {
+                      sounds.pop();
+                      act("join");
+                    }}
+                    disabled={isActing}
+                    className="btn btn-black btn-lg"
+                    style={{ width: "100%", maxWidth: "340px", background: "#FFFFFF", color: "#000000" }}
+                  >
+                    🎟️ Join & Claim VIP Pass as {me.name}
+                  </button>
+                ) : (
+                  <div
+                    style={{
+                      background: "rgba(34, 197, 94, 0.2)",
+                      border: "1px solid rgba(74, 222, 128, 0.4)",
+                      borderRadius: "12px",
+                      padding: "10px 16px",
+                      color: "#86EFAC",
+                      fontWeight: 700,
+                      fontSize: "14px",
+                      display: "inline-block",
+                    }}
+                  >
+                    ✅ VIP Pass Confirmed! You are in the room.
+                  </div>
+                )}
+              </div>
+
+              {/* Chief Guest / Host Ribbon Cut Action */}
+              <div style={{ marginTop: "24px", paddingTop: "20px", borderTop: "1px dashed rgba(245, 158, 11, 0.3)" }}>
+                {me.host ? (
+                  <div>
+                    <div
+                      style={{
+                        fontSize: "12px",
+                        color: "#FDE68A",
+                        fontWeight: 800,
+                        textTransform: "uppercase",
+                        letterSpacing: "0.08em",
+                        marginBottom: "10px",
+                      }}
+                    >
+                      👑 CHIEF GUEST ACTION
+                    </div>
+                    <button
+                      onClick={handleCutRibbon}
+                      disabled={isActing || isUnveiling}
+                      className="btn-scissors-inaugurate"
+                    >
+                      ✂️ Cut Ribbon & Inaugurate (फीता काटें!)
+                    </button>
+                    <div style={{ fontSize: "12px", color: "#FDE68A", marginTop: "8px", opacity: 0.8 }}>
+                      Clicking will snip the ribbon, open curtains with Shehnai fanfare & unveil the game to everyone!
+                    </div>
+                  </div>
+                ) : (
+                  <div style={{ color: "#FDE68A", fontSize: "13px", fontStyle: "italic" }}>
+                    ⏳ Chief Guest (Organizer) will cut the ceremonial ribbon shortly... Dil thaam ke baithiye! 🪑
+                  </div>
+                )}
+              </div>
+
+              {/* Quick links while waiting */}
+              <div style={{ marginTop: "20px", display: "flex", justifyContent: "center", gap: "10px", flexWrap: "wrap" }}>
+                <button
+                  onClick={() => setShowRules(true)}
+                  className="btn btn-outline btn-sm"
+                  style={{ borderColor: "rgba(255,255,255,0.3)", color: "#FFFFFF" }}
+                >
+                  📖 Rules & How to Play
+                </button>
+                <Link
+                  href="/ai"
+                  className="btn btn-outline btn-sm"
+                  style={{ borderColor: "rgba(255,255,255,0.3)", color: "#FDA4AF", textDecoration: "none" }}
+                >
+                  ⚡ How AI Built This
+                </Link>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Main Game Interface (visible when inaugurated) */}
+        {(d.inaugurated && !isUnveiling) && (
+          <>
+            {/* Phase / Lobby Card with Join & Leave Options */}
+            {!drawn && (
           <div className="card">
             <div className="card-header">
               <span className="card-title">🎮 Game Lobby</span>
@@ -913,6 +1116,21 @@ export default function Home() {
                 >
                   🎲 Draw Matches ({d.players.length} Players in Lobby)
                 </button>
+
+                <div style={{ marginTop: "12px", textAlign: "right" }}>
+                  <button
+                    onClick={() => {
+                      if (confirm("Replay ribbon cutting ceremony? Curtains and ribbon will close again for suspense.")) {
+                        act("reset_inauguration");
+                      }
+                    }}
+                    disabled={isActing}
+                    className="btn btn-outline btn-sm"
+                    title="Reclose curtains & ribbon for testing or suspense"
+                  >
+                    🎀 Replay Ribbon Ceremony
+                  </button>
+                </div>
               </div>
             ) : (
               <div className="btn-group">
@@ -966,6 +1184,19 @@ export default function Home() {
 
                 <button
                   onClick={() => {
+                    if (confirm("Replay ribbon cutting ceremony? Curtains and ribbon will close again for suspense.")) {
+                      act("reset_inauguration");
+                    }
+                  }}
+                  disabled={isActing}
+                  className="btn btn-outline"
+                  title="Reclose curtains & ribbon for testing or suspense"
+                >
+                  🎀 Replay Ceremony
+                </button>
+
+                <button
+                  onClick={() => {
                     if (confirm("Are you sure you want to reset the draw? All matches will be wiped.")) {
                       act("reset");
                     }
@@ -979,6 +1210,8 @@ export default function Home() {
               </div>
             )}
           </div>
+        )}
+          </>
         )}
 
         {/* Participants Lobby Card */}
@@ -1039,8 +1272,8 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Awards & Voting (When drawn and user is participating) */}
-        {drawn && me.joined && (
+        {/* Awards & Voting (When drawn, inaugurated, and user is participating) */}
+        {d.inaugurated && !isUnveiling && drawn && me.joined && (
           <div className="card">
             <div className="card-header">
               <span className="card-title">🏆 Fun Friday Awards</span>

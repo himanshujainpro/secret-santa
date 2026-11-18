@@ -35,22 +35,24 @@ async function who() {
 
 async function load() {
   const r = redis();
-  const [st, players, matches, votes, gifts, insiders] = await Promise.all([
+  const [st, players, matches, votes, gifts, insiders, flowers] = await Promise.all([
     r.get("fg:state"),
     r.hgetall("fg:players"),
     r.hgetall("fg:matches"),
     r.hgetall("fg:votes"),
     r.hgetall("fg:gifts"),
     r.smembers("fg:insiders"),
+    r.get("fg:flowers"),
   ]);
   const insiderList = Array.isArray(insiders) ? insiders : [];
   return {
-    st: st || { phase: "lobby" },
+    st: st || { phase: "lobby", inaugurated: false },
     players: players || {},
     matches: matches || {},
     votes: votes || {},
     gifts: gifts || {},
     insiders: insiderList,
+    flowers: parseInt(flowers || "0", 10),
   };
 }
 
@@ -58,7 +60,7 @@ async function load() {
 export async function GET() {
   const me = await who();
   if (!me) return Response.json({ error: "auth" }, { status: 401 });
-  const { st, players, matches, votes, gifts, insiders } = await load();
+  const { st, players, matches, votes, gifts, insiders, flowers } = await load();
   const drawn = st.phase === "drawn";
 
   // Active gift on the live stage (anonymous - author ID is never attached)
@@ -96,6 +98,8 @@ export async function GET() {
       isAiInsider: insiderSet.has(id),
     })),
     phase: st.phase,
+    inaugurated: !!st.inaugurated,
+    flowerCount: flowers || 0,
     order: st.order || [],
     idx: st.idx ?? -1,
     revealed: !!st.revealed,
@@ -124,10 +128,31 @@ export async function POST(req) {
   const bad = (m) => Response.json({ error: m }, { status: 400 });
   const save = (patch) => r.set("fg:state", { ...st, ...patch });
 
-  const hostOnly = ["remove", "draw", "roll", "next", "reveal", "announce", "reset", "addTime", "pick_reader"];
+  const hostOnly = [
+    "remove",
+    "draw",
+    "roll",
+    "next",
+    "reveal",
+    "announce",
+    "reset",
+    "addTime",
+    "pick_reader",
+    "inaugurate",
+    "reset_inauguration",
+  ];
   if (hostOnly.includes(A) && !me.host) return Response.json({ error: "forbidden" }, { status: 403 });
 
-  if (A === "join") {
+  if (A === "inaugurate") {
+    await save({ inaugurated: true });
+    return Response.json({ ok: true, inaugurated: true });
+  } else if (A === "reset_inauguration") {
+    await save({ inaugurated: false });
+    return Response.json({ ok: true, inaugurated: false });
+  } else if (A === "flower") {
+    const updated = await r.incr("fg:flowers");
+    return Response.json({ ok: true, flowerCount: updated });
+  } else if (A === "join") {
     if (drawn) return bad("The draw already happened.");
     await r.hset("fg:players", { [me.id]: me.name });
   } else if (A === "claim_insider") {
@@ -155,8 +180,16 @@ export async function POST(req) {
     await r.del("fg:gifts");
     await r.hset("fg:matches", m);
     await r.set("fg:state", {
-      phase: "drawn", order: shuf(s), idx: -1, revealed: false,
-      giver: "", readerId: "", category: "", startedAt: 0, results: null,
+      phase: "drawn",
+      inaugurated: true,
+      order: shuf(s),
+      idx: -1,
+      revealed: false,
+      giver: "",
+      readerId: "",
+      category: "",
+      startedAt: 0,
+      results: null,
     });
   } else if (A === "roll") {
     if (!drawn) return bad("Draw first.");
@@ -165,7 +198,6 @@ export async function POST(req) {
     if (!drawn) return bad("Draw first.");
     const nextIdx = Math.min((st.idx ?? -1) + 1, st.order.length);
     const recv = st.order?.[nextIdx];
-    // Pick a random colleague to present/read the pitch aloud (anyone except the receiver)
     const playerIds = Object.keys(players);
     const eligibleReaders = playerIds.filter((id) => id !== recv);
     const readerId = eligibleReaders.length > 0 ? eligibleReaders[Math.floor(Math.random() * eligibleReaders.length)] : "";
