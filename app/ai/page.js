@@ -3,6 +3,8 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { sounds, triggerGiftRain } from "@/lib/effects";
 
+export const dynamic = "force-dynamic";
+
 function ScansLogo() {
   return (
     <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
