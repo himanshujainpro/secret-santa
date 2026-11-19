@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { sounds, triggerGiftRain, triggerDevStackRain, triggerNameRain } from "@/lib/effects";
+import TeamRosterSidebar from "@/components/TeamRosterSidebar";
 
 export const dynamic = "force-dynamic";
 
@@ -25,6 +26,8 @@ export default function AIShowcasePage() {
   const [comparisonMode, setComparisonMode] = useState("himanshu"); // "traditional" | "himanshu"
   const [reactions, setReactions] = useState({ blown: 0, speed: 0, banter: 0, op: 0 });
   const [userReacted, setUserReacted] = useState({});
+  const [gameState, setGameState] = useState(null);
+  const [showTeamSidebar, setShowTeamSidebar] = useState(false);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -38,6 +41,12 @@ export default function AIShowcasePage() {
       .then((data) => {
         if (data?.counts) setReactions(data.counts);
       })
+      .catch(() => {});
+
+    // Fetch game state for Chief Guest
+    fetch("/api/state")
+      .then((res) => res.json())
+      .then((data) => setGameState(data))
       .catch(() => {});
   }, []);
 
@@ -162,6 +171,23 @@ export default function AIShowcasePage() {
               </button>
             </div>
 
+            <button
+              onClick={() => setShowTeamSidebar(!showTeamSidebar)}
+              className="header-btn"
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "6px",
+                fontWeight: 700,
+                color: showTeamSidebar ? "#BC0070" : "var(--text-main)",
+                borderColor: showTeamSidebar ? "var(--brand-pink)" : "var(--card-border)",
+              }}
+              title="View Scans.ai Dream Team & Chief Guest"
+            >
+              <span>👥</span>
+              <span>Team (16)</span>
+            </button>
+
             <Link href="/" className="header-btn" style={{ textDecoration: "none" }}>
               🎁 Back to Game
             </Link>
@@ -169,8 +195,9 @@ export default function AIShowcasePage() {
         </div>
       </header>
 
-      {/* Main Container */}
-      <main className="container" style={{ flex: 1, paddingBottom: "60px" }}>
+      {/* Main Container with Team Roster Sidebar */}
+      <div className="app-stage-wrapper">
+        <main className="stage-main-column">
         {activeTab === "quick" ? (
           /* =========================================================================
              VERSION 1: 1-PAGER QUICK SHOWCASE (FUN FRIDAY PRESENTATION)
@@ -1635,7 +1662,14 @@ export default function AIShowcasePage() {
             )}
           </div>
         )}
-      </main>
+        </main>
+
+        <TeamRosterSidebar
+          chiefGuest={gameState?.chiefGuest}
+          isOpen={showTeamSidebar}
+          onClose={() => setShowTeamSidebar(false)}
+        />
+      </div>
 
       {/* Footer */}
       <footer

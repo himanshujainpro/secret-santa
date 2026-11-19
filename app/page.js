@@ -3,6 +3,7 @@ import { useEffect, useState, useCallback, useRef } from "react";
 import { signIn, signOut } from "next-auth/react";
 import Link from "next/link";
 import { sounds, triggerGiftRain, triggerFlowerRain, triggerDevStackRain, triggerNameRain, triggerComboRain } from "@/lib/effects";
+import TeamRosterSidebar from "@/components/TeamRosterSidebar";
 
 export const dynamic = "force-dynamic";
 
@@ -84,6 +85,7 @@ export default function Home() {
   const [cgTitle, setCgTitle] = useState("Founder & CEO");
   const [cgPhotoUrl, setCgPhotoUrl] = useState("");
   const [cgPlayerId, setCgPlayerId] = useState("");
+  const [showTeamSidebar, setShowTeamSidebar] = useState(false);
   const [clockTime, setClockTime] = useState("");
 
   useEffect(() => {
@@ -971,6 +973,23 @@ export default function Home() {
               ⭐ Rate &amp; Review ({d?.reviews?.length || 0})
             </button>
 
+            <button
+              onClick={() => setShowTeamSidebar(!showTeamSidebar)}
+              className="header-btn"
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "6px",
+                fontWeight: 700,
+                color: showTeamSidebar ? "#BC0070" : "var(--text-main)",
+                borderColor: showTeamSidebar ? "var(--brand-pink)" : "var(--card-border)",
+              }}
+              title="View Scans.ai Dream Team & Chief Guest"
+            >
+              <span>👥</span>
+              <span>Team (16)</span>
+            </button>
+
             <div className="user-pill" style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}>
               <span className="user-avatar-circle">{getInitials(me.name)}</span>
               <span style={{ maxWidth: "120px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
@@ -1008,9 +1027,10 @@ export default function Home() {
         </div>
       </header>
 
-      <main className="container">
-        {/* Error Alert */}
-        {errorMsg && <div className="alert-banner">⚠️ {errorMsg}</div>}
+      <div className="app-stage-wrapper">
+        <main className="stage-main-column">
+          {/* Error Alert */}
+          {errorMsg && <div className="alert-banner">⚠️ {errorMsg}</div>}
 
         {/* Grand Shop Inauguration & Ribbon Cutting Ceremony */}
         {(!d.inaugurated || isUnveiling) && (
@@ -2038,10 +2058,18 @@ export default function Home() {
                     Chief Guest of Honour
                   </div>
                   <div style={{ fontSize: "14px", fontWeight: 800, color: "var(--text-main)" }}>
-                    {d.chiefGuest.revealed || me.host ? d.chiefGuest.name : "🔒 Mystery VIP (Awaiting Inauguration)"}
-                    {(d.chiefGuest.revealed || me.host) && d.chiefGuest.title && (
-                      <span style={{ fontSize: "12px", color: "var(--text-muted)", fontWeight: 500, marginLeft: "6px" }}>
-                        • {d.chiefGuest.title}
+                    {d.chiefGuest.revealed ? (
+                      <span>
+                        {d.chiefGuest.name}
+                        {d.chiefGuest.title && (
+                          <span style={{ fontSize: "12px", color: "var(--text-muted)", fontWeight: 500, marginLeft: "6px" }}>
+                            • {d.chiefGuest.title}
+                          </span>
+                        )}
+                      </span>
+                    ) : (
+                      <span style={{ color: "#D97706" }}>
+                        🔒 Top Secret Mystery VIP • Revealed at Inauguration!
                       </span>
                     )}
                   </div>
@@ -2080,12 +2108,12 @@ export default function Home() {
                   <span
                     className={`player-chip ${isCurrentPlayer ? "is-you" : ""}`}
                     key={p.id}
-                    style={isCg ? { border: "1.5px solid #F59E0B", background: "rgba(245, 158, 11, 0.08)" } : {}}
+                    style={isCg && d.chiefGuest?.revealed ? { border: "1.5px solid #F59E0B", background: "rgba(245, 158, 11, 0.08)" } : {}}
                   >
                     <span className="chip-initials">{getInitials(p.name)}</span>
                     <span style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}>
                       {p.name}{isCurrentPlayer ? " (you)" : ""}
-                      {isCg && (d.chiefGuest.revealed || me.host) && (
+                      {isCg && d.chiefGuest?.revealed && (
                         <span
                           title="👑 Chief Guest of Honour"
                           style={{
@@ -2269,7 +2297,14 @@ export default function Home() {
             )}
           </div>
         )}
-      </main>
+        </main>
+
+        <TeamRosterSidebar
+          chiefGuest={d.chiefGuest}
+          isOpen={showTeamSidebar}
+          onClose={() => setShowTeamSidebar(false)}
+        />
+      </div>
 
       <footer style={{ marginTop: "auto", padding: "20px 0", textAlign: "center", borderTop: "1px solid var(--card-border)" }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", fontSize: "12px", color: "var(--text-muted)" }}>
