@@ -66,6 +66,7 @@ export default function Home() {
   const [toastMsg, setToastMsg] = useState("");
   const [isActing, setIsActing] = useState(false);
   const [isUnveiling, setIsUnveiling] = useState(false);
+  const [unveilSecondsLeft, setUnveilSecondsLeft] = useState(15);
   const [showerMode, setShowerMode] = useState("names"); // 'names' | 'tech' | 'flowers' | 'mix'
 
   // Anonymous Rate & Review State
@@ -124,6 +125,27 @@ export default function Home() {
     }
   };
 
+  const triggerInaugurationCelebration = useCallback((playersList) => {
+    setIsUnveiling(true);
+    setUnveilSecondsLeft(15);
+    sounds.snip();
+    sounds.applause(15);
+    triggerNameRain(playersList, true);
+
+    let sec = 15;
+    const timerInterval = setInterval(() => {
+      sec -= 1;
+      setUnveilSecondsLeft(sec);
+      if (sec % 3 === 0 && sec > 0) {
+        triggerComboRain(playersList, true);
+      }
+      if (sec <= 0) {
+        clearInterval(timerInterval);
+        setIsUnveiling(false);
+      }
+    }, 1000);
+  }, []);
+
   const load = useCallback(async () => {
     try {
       const r = await fetch("/api/state", { cache: "no-store" });
@@ -159,11 +181,7 @@ export default function Home() {
 
       // Check if Inauguration ceremony just happened -> Primary High-Volume Crowd Clapping & Teammate Name Rain
       if (j.inaugurated && prevInauguratedRef.current === false) {
-        setIsUnveiling(true);
-        sounds.snip();
-        sounds.applause(5.5);
-        triggerNameRain(j.players || d?.players, true);
-        setTimeout(() => setIsUnveiling(false), 2400);
+        triggerInaugurationCelebration(j.players || d?.players);
       }
       prevInauguratedRef.current = !!j.inaugurated;
 
@@ -264,16 +282,8 @@ export default function Home() {
   };
 
   const handleCutRibbon = async () => {
-    setIsUnveiling(true);
-    sounds.snip();
-    // Clapping is primary & high-volume, no competing sounds
-    sounds.applause(5.5);
-    // Ribbon ceremony strictly showers teammate name badges!
-    triggerNameRain(d?.players, true);
+    triggerInaugurationCelebration(d?.players);
     await act("inaugurate");
-    setTimeout(() => {
-      setIsUnveiling(false);
-    }, 2400);
   };
 
   const handleSubmitReview = async (e) => {
@@ -520,7 +530,7 @@ export default function Home() {
                     }
                   }}
                   className="text-input"
-                  style={{ padding: "8px 12px" }}
+                  style={{ padding: "8px 12px", marginBottom: "8px" }}
                 >
                   <option value="">-- Choose a Participant or Custom VIP below --</option>
                   {d.players.map((p) => (
@@ -529,6 +539,23 @@ export default function Home() {
                     </option>
                   ))}
                 </select>
+
+                <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
+                  {d.players.map((p) => (
+                    <button
+                      key={p.id}
+                      type="button"
+                      onClick={() => {
+                        setCgPlayerId(p.id);
+                        setCgName(p.name);
+                      }}
+                      className={`btn btn-sm ${cgPlayerId === p.id ? "btn-gradient" : "btn-outline"}`}
+                      style={{ fontSize: "11px", padding: "3px 8px" }}
+                    >
+                      👑 {p.name}
+                    </button>
+                  ))}
+                </div>
               </div>
             )}
 
@@ -994,103 +1021,133 @@ export default function Home() {
 
             {/* Prominent Ceremonial Red & Gold Ribbon with Golden Bow */}
             <div className="ceremonial-ribbon-wrapper">
-              <div className={`ribbon-strap ${isUnveiling ? "is-cut" : ""}`}>
-                <div className="ribbon-golden-bow">🎀</div>
-              </div>
+              {isUnveiling ? (
+                <div className="ceremonial-unveil-modal">
+                  <div className="ceremonial-unveil-badge">✂️ OFFICIALLY INAUGURATED</div>
+                  <h2 className="ceremonial-unveil-title">
+                    Fun Friday 2050 Is Live! 🎉
+                  </h2>
+                  <div className="ceremonial-unveil-guest">
+                    Inaugurated with Royal Honours by{" "}
+                    <strong>{d.chiefGuest?.name || "Our Founder & CEO"}</strong>
+                    {d.chiefGuest?.title && (
+                      <span style={{ opacity: 0.9 }}> • {d.chiefGuest.title}</span>
+                    )}
+                  </div>
+                  <div className="ceremonial-unveil-meter">
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                      <span>👏 Thunderous Stadium Clapping</span>
+                      <span style={{ color: "#FDE68A" }}>{Math.round(((15 - unveilSecondsLeft) / 15) * 100)}%</span>
+                    </div>
+                    <div className="ceremonial-meter-bar">
+                      <div className="ceremonial-meter-fill" style={{ width: `${((15 - unveilSecondsLeft) / 15) * 100}%` }} />
+                    </div>
+                  </div>
+                  <div className="ceremonial-unveil-timer">
+                    Entering Live Game Arena in <strong>{unveilSecondsLeft}s</strong>...
+                  </div>
+                </div>
+              ) : (
+                <div className="ribbon-strap">
+                  <div className="ribbon-golden-bow">🎀</div>
+                </div>
+              )}
 
               {/* Chief Guest Ribbon Cut Action (Tied directly to the ribbon) */}
-              <div className="chief-guest-panel">
-                {d.chiefGuest?.revealed ? (
-                  d.chiefGuest.isMe ? (
-                    <div>
-                      <div style={{ fontSize: "12px", fontWeight: 800, color: "#FDE68A", letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: "10px" }}>
-                        🎖️ CHIEF GUEST VIP PRIVILEGE
+              {!isUnveiling && (
+                <div className="chief-guest-panel">
+                  {d.chiefGuest?.revealed ? (
+                    d.chiefGuest.isMe ? (
+                      <div>
+                        <div style={{ fontSize: "12px", fontWeight: 800, color: "#FDE68A", letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: "10px" }}>
+                          🎖️ CHIEF GUEST VIP PRIVILEGE
+                        </div>
+                        <button
+                          onClick={handleCutRibbon}
+                          disabled={isActing || isUnveiling}
+                          className="btn-scissors-cut"
+                        >
+                          ✂️ Cut the Ribbon &amp; Inaugurate (Chief Guest)
+                        </button>
+                        <div style={{ fontSize: "12px", color: "#FDE68A", opacity: 0.85, marginTop: "8px" }}>
+                          As our Chief Guest, snipping the ribbon will inaugurate the event with royal fanfare for everyone!
+                        </div>
                       </div>
-                      <button
-                        onClick={handleCutRibbon}
-                        disabled={isActing || isUnveiling}
-                        className="btn-scissors-cut"
-                      >
-                        ✂️ Cut the Ribbon &amp; Inaugurate (Chief Guest)
-                      </button>
-                      <div style={{ fontSize: "12px", color: "#FDE68A", opacity: 0.85, marginTop: "8px" }}>
-                        As our Chief Guest, snipping the ribbon will inaugurate the event with royal fanfare for everyone!
+                    ) : me.host ? (
+                      <div>
+                        <div style={{ fontSize: "12px", fontWeight: 800, color: "#FDE68A", letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: "10px" }}>
+                          👑 ORGANIZER ACTION (CHIEF GUEST: {d.chiefGuest.name})
+                        </div>
+                        <button
+                          onClick={handleCutRibbon}
+                          disabled={isActing || isUnveiling}
+                          className="btn-scissors-cut"
+                        >
+                          ✂️ Cut the Ribbon as Organizer (Fallback)
+                        </button>
+                        <div style={{ fontSize: "12px", color: "#FDE68A", opacity: 0.85, marginTop: "8px" }}>
+                          Chief Guest ({d.chiefGuest.name}) can also cut the ribbon directly from their screen!
+                        </div>
                       </div>
-                    </div>
+                    ) : (
+                      <div style={{ display: "inline-flex", alignItems: "center", gap: "8px", background: "rgba(245, 158, 11, 0.15)", border: "1px solid rgba(245, 158, 11, 0.4)", padding: "10px 20px", borderRadius: "9999px", color: "#FDE68A", fontSize: "14px", fontWeight: 700 }}>
+                        <span>✂️</span>
+                        <span>Awaiting Chief Guest (<strong>{d.chiefGuest.name}</strong>) to cut the ceremonial ribbon! 🎀</span>
+                      </div>
+                    )
+                  ) : d.chiefGuest?.assigned ? (
+                    me.host ? (
+                      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "10px" }}>
+                        <button
+                          onClick={handleRevealChiefGuest}
+                          disabled={isActing}
+                          className="btn btn-gradient btn-lg"
+                          style={{ boxShadow: "0 0 25px rgba(245, 158, 11, 0.6)" }}
+                        >
+                          🌟 Reveal Chief Guest ({d.chiefGuest.name}) with Fanfare!
+                        </button>
+                        <button
+                          onClick={handleCutRibbon}
+                          disabled={isActing || isUnveiling}
+                          className="btn-scissors-cut"
+                          style={{ fontSize: "14px", padding: "10px 24px" }}
+                        >
+                          ✂️ Cut Ribbon Directly as Organizer
+                        </button>
+                      </div>
+                    ) : (
+                      <div style={{ display: "inline-flex", alignItems: "center", gap: "8px", background: "rgba(245, 158, 11, 0.15)", border: "1px solid rgba(245, 158, 11, 0.4)", padding: "10px 20px", borderRadius: "9999px", color: "#FDE68A", fontSize: "14px", fontWeight: 700 }}>
+                        <span>🤫</span>
+                        <span>Mystery Chief Guest will be revealed soon... Stay tuned! 🌟</span>
+                      </div>
+                    )
                   ) : me.host ? (
                     <div>
-                      <div style={{ fontSize: "12px", fontWeight: 800, color: "#FDE68A", letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: "10px" }}>
-                        👑 ORGANIZER ACTION (CHIEF GUEST: {d.chiefGuest.name})
+                      <div style={{ display: "flex", justifyContent: "center", gap: "10px", flexWrap: "wrap", marginBottom: "12px" }}>
+                        <button
+                          onClick={() => setShowCgModal(true)}
+                          disabled={isActing}
+                          className="btn btn-gradient btn-sm"
+                        >
+                          👑 Assign VIP Chief Guest (e.g. Founder)
+                        </button>
                       </div>
                       <button
                         onClick={handleCutRibbon}
                         disabled={isActing || isUnveiling}
                         className="btn-scissors-cut"
                       >
-                        ✂️ Cut the Ribbon as Organizer (Fallback)
-                      </button>
-                      <div style={{ fontSize: "12px", color: "#FDE68A", opacity: 0.85, marginTop: "8px" }}>
-                        Chief Guest ({d.chiefGuest.name}) can also cut the ribbon directly from their screen!
-                      </div>
-                    </div>
-                  ) : (
-                    <div style={{ display: "inline-flex", alignItems: "center", gap: "8px", background: "rgba(245, 158, 11, 0.15)", border: "1px solid rgba(245, 158, 11, 0.4)", padding: "10px 20px", borderRadius: "9999px", color: "#FDE68A", fontSize: "14px", fontWeight: 700 }}>
-                      <span>✂️</span>
-                      <span>Awaiting Chief Guest (<strong>{d.chiefGuest.name}</strong>) to cut the ceremonial ribbon! 🎀</span>
-                    </div>
-                  )
-                ) : d.chiefGuest?.assigned ? (
-                  me.host ? (
-                    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "10px" }}>
-                      <button
-                        onClick={handleRevealChiefGuest}
-                        disabled={isActing}
-                        className="btn btn-gradient btn-lg"
-                        style={{ boxShadow: "0 0 25px rgba(245, 158, 11, 0.6)" }}
-                      >
-                        🌟 Reveal Chief Guest ({d.chiefGuest.name}) with Fanfare!
-                      </button>
-                      <button
-                        onClick={handleCutRibbon}
-                        disabled={isActing || isUnveiling}
-                        className="btn-scissors-cut"
-                        style={{ fontSize: "14px", padding: "10px 24px" }}
-                      >
-                        ✂️ Cut Ribbon Directly as Organizer
+                        ✂️ Cut the Ribbon &amp; Inaugurate
                       </button>
                     </div>
                   ) : (
                     <div style={{ display: "inline-flex", alignItems: "center", gap: "8px", background: "rgba(245, 158, 11, 0.15)", border: "1px solid rgba(245, 158, 11, 0.4)", padding: "10px 20px", borderRadius: "9999px", color: "#FDE68A", fontSize: "14px", fontWeight: 700 }}>
-                      <span>🤫</span>
-                      <span>Mystery Chief Guest will be revealed soon... Stay tuned! 🌟</span>
+                      <span>⏳</span>
+                      <span>Awaiting Chief Guest / Organizer to cut the ceremonial ribbon... Stay tuned! 🎀</span>
                     </div>
-                  )
-                ) : me.host ? (
-                  <div>
-                    <div style={{ display: "flex", justifyContent: "center", gap: "10px", flexWrap: "wrap", marginBottom: "12px" }}>
-                      <button
-                        onClick={() => setShowCgModal(true)}
-                        disabled={isActing}
-                        className="btn btn-gradient btn-sm"
-                      >
-                        👑 Assign VIP Chief Guest (e.g. Founder)
-                      </button>
-                    </div>
-                    <button
-                      onClick={handleCutRibbon}
-                      disabled={isActing || isUnveiling}
-                      className="btn-scissors-cut"
-                    >
-                      ✂️ Cut the Ribbon &amp; Inaugurate
-                    </button>
-                  </div>
-                ) : (
-                  <div style={{ display: "inline-flex", alignItems: "center", gap: "8px", background: "rgba(245, 158, 11, 0.15)", border: "1px solid rgba(245, 158, 11, 0.4)", padding: "10px 20px", borderRadius: "9999px", color: "#FDE68A", fontSize: "14px", fontWeight: 700 }}>
-                    <span>⏳</span>
-                    <span>Awaiting Chief Guest / Organizer to cut the ceremonial ribbon... Stay tuned! 🎀</span>
-                  </div>
-                )}
-              </div>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Inner Content Card (Interactive Banner, Flower shower & VIP check-in) */}
@@ -1582,6 +1639,25 @@ export default function Home() {
               )}
             </div>
 
+            {d.chiefGuest?.assigned && (d.chiefGuest.revealed || me.host) && (
+              <div style={{ textAlign: "center", marginBottom: "8px" }}>
+                <span style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "6px",
+                  background: "rgba(245, 158, 11, 0.1)",
+                  border: "1px solid rgba(245, 158, 11, 0.3)",
+                  padding: "3px 10px",
+                  borderRadius: "100px",
+                  fontSize: "11px",
+                  fontWeight: 700,
+                  color: "#D97706",
+                }}>
+                  👑 Inaugurated by Chief Guest: <strong>{d.chiefGuest.name}</strong>
+                </span>
+              </div>
+            )}
+
             {idx < 0 && (
               <div style={{ textAlign: "center", padding: "30px 10px" }}>
                 <div style={{ fontSize: "36px", marginBottom: "10px" }}>🎁</div>
@@ -1952,6 +2028,42 @@ export default function Home() {
             </span>
           </div>
 
+          {/* Chief Guest VIP Card in the Lobby */}
+          {d.chiefGuest?.assigned && (
+            <div className="lobby-chief-guest-banner">
+              <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                <span style={{ fontSize: "24px" }}>👑</span>
+                <div>
+                  <div style={{ fontSize: "11px", fontWeight: 800, color: "#D97706", textTransform: "uppercase", letterSpacing: "0.06em" }}>
+                    Chief Guest of Honour
+                  </div>
+                  <div style={{ fontSize: "14px", fontWeight: 800, color: "var(--text-main)" }}>
+                    {d.chiefGuest.revealed || me.host ? d.chiefGuest.name : "🔒 Mystery VIP (Awaiting Inauguration)"}
+                    {(d.chiefGuest.revealed || me.host) && d.chiefGuest.title && (
+                      <span style={{ fontSize: "12px", color: "var(--text-muted)", fontWeight: 500, marginLeft: "6px" }}>
+                        • {d.chiefGuest.title}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                <span className={`badge ${d.inaugurated ? "badge-blue" : "badge-green"}`} style={{ fontSize: "11px" }}>
+                  {d.inaugurated ? "✅ Inaugurated" : "✂️ Ready for Ribbon Cut"}
+                </span>
+                {me.host && !drawn && (
+                  <button
+                    onClick={() => setShowCgModal(true)}
+                    className="btn btn-outline btn-sm"
+                    style={{ fontSize: "11px", padding: "4px 10px" }}
+                  >
+                    ✏️ Edit VIP
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
+
           <div className="chips-grid">
             {d.players.length === 0 ? (
               <span style={{ color: "var(--text-muted)", fontSize: "14px" }}>
@@ -1960,14 +2072,35 @@ export default function Home() {
             ) : (
               d.players.map((p) => {
                 const isCurrentPlayer = p.id === me.id;
+                const isCg = d.chiefGuest?.assigned && (
+                  (d.chiefGuest.id && p.id === d.chiefGuest.id) ||
+                  (d.chiefGuest.name && p.name && p.name.toLowerCase() === d.chiefGuest.name.toLowerCase())
+                );
                 return (
                   <span
                     className={`player-chip ${isCurrentPlayer ? "is-you" : ""}`}
                     key={p.id}
+                    style={isCg ? { border: "1.5px solid #F59E0B", background: "rgba(245, 158, 11, 0.08)" } : {}}
                   >
                     <span className="chip-initials">{getInitials(p.name)}</span>
                     <span style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}>
                       {p.name}{isCurrentPlayer ? " (you)" : ""}
+                      {isCg && (d.chiefGuest.revealed || me.host) && (
+                        <span
+                          title="👑 Chief Guest of Honour"
+                          style={{
+                            fontSize: "10px",
+                            fontWeight: 800,
+                            padding: "1px 6px",
+                            borderRadius: "4px",
+                            background: "linear-gradient(135deg, #F59E0B, #D97706)",
+                            color: "#fff",
+                            boxShadow: "0 2px 6px rgba(245, 158, 11, 0.3)",
+                          }}
+                        >
+                          👑 Chief Guest
+                        </span>
+                      )}
                       {p.isAiInsider && (
                         <span
                           title="⚡ AI Insider: Unlocked by reading the story"
@@ -1985,6 +2118,25 @@ export default function Home() {
                         </span>
                       )}
                     </span>
+                    {me.host && !drawn && !isCg && (
+                      <button
+                        title={`Make ${p.name} Chief Guest`}
+                        className="chip-remove-btn"
+                        style={{ color: "#F59E0B", marginRight: "3px" }}
+                        onClick={() => {
+                          setCgPlayerId(p.id);
+                          setCgName(p.name);
+                          act("set_chief_guest", {
+                            name: p.name,
+                            title: "Founder & CEO",
+                            id: p.id,
+                          });
+                          showToast(`👑 ${p.name} assigned as Chief Guest!`);
+                        }}
+                      >
+                        👑
+                      </button>
+                    )}
                     {me.host && !drawn && (
                       <button
                         title="Remove player"

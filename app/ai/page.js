@@ -23,7 +23,7 @@ export default function AIShowcasePage() {
   const [claimedBadge, setClaimedBadge] = useState(false);
   const [claiming, setClaiming] = useState(false);
   const [comparisonMode, setComparisonMode] = useState("himanshu"); // "traditional" | "himanshu"
-  const [reactions, setReactions] = useState({ blown: 42, speed: 38, banter: 56, op: 64 });
+  const [reactions, setReactions] = useState({ blown: 0, speed: 0, banter: 0, op: 0 });
   const [userReacted, setUserReacted] = useState({});
 
   useEffect(() => {
@@ -40,6 +40,24 @@ export default function AIShowcasePage() {
       })
       .catch(() => {});
   }, []);
+
+  const handleResetReactions = async () => {
+    sounds.pop();
+    try {
+      const res = await fetch("/api/reactions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "reset_reactions" }),
+      });
+      const data = await res.json();
+      if (data?.counts) {
+        setReactions(data.counts);
+      } else {
+        setReactions({ blown: 0, speed: 0, banter: 0, op: 0 });
+      }
+      setUserReacted({});
+    } catch {}
+  };
 
   const handleClaimBadge = async () => {
     if (claiming) return;
@@ -1128,6 +1146,16 @@ export default function AIShowcasePage() {
                   <span style={{ fontSize: "12px", color: "var(--text-muted)", background: "var(--chip-bg)", padding: "2px 8px", borderRadius: "10px" }}>
                     {reactions.op}
                   </span>
+                </button>
+              </div>
+
+              <div style={{ marginTop: "16px" }}>
+                <button
+                  onClick={handleResetReactions}
+                  className="btn btn-outline btn-sm"
+                  style={{ fontSize: "11px", color: "var(--text-muted)", opacity: 0.8 }}
+                >
+                  🔄 Reset Reactions to 0
                 </button>
               </div>
             </div>

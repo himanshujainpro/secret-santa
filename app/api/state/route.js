@@ -373,6 +373,7 @@ export async function POST(req) {
       r.del("fg:votes"),
       r.del("fg:gifts"),
       r.del("fg:reviews"),
+      r.del("fg:ai_reactions"),
     ]);
     invalidateMemoryCache();
   } else if (A === "nuclear_reset") {
@@ -384,6 +385,7 @@ export async function POST(req) {
       r.del("fg:flowers"),
       r.del("fg:chief_guest"),
       r.del("fg:reviews"),
+      r.del("fg:ai_reactions"),
     ]);
     invalidateMemoryCache();
     return Response.json({ ok: true, cleared: true });

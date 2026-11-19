@@ -9,15 +9,15 @@ export async function GET() {
   try {
     const raw = await r.hgetall("fg:ai_reactions");
     const counts = {
-      blown: parseInt(raw?.blown || "42", 10),
-      speed: parseInt(raw?.speed || "38", 10),
-      banter: parseInt(raw?.banter || "56", 10),
-      op: parseInt(raw?.op || "64", 10),
+      blown: parseInt(raw?.blown || "0", 10),
+      speed: parseInt(raw?.speed || "0", 10),
+      banter: parseInt(raw?.banter || "0", 10),
+      op: parseInt(raw?.op || "0", 10),
     };
     return Response.json({ counts, success: true });
   } catch (err) {
     return Response.json({
-      counts: { blown: 42, speed: 38, banter: 56, op: 64 },
+      counts: { blown: 0, speed: 0, banter: 0, op: 0 },
       success: true,
     });
   }
@@ -35,6 +35,15 @@ export async function POST(req) {
   const userId = email ? idOf(email) : null;
 
   try {
+    if (body.action === "reset_reactions") {
+      await r.del("fg:ai_reactions");
+      return Response.json({
+        success: true,
+        cleared: true,
+        counts: { blown: 0, speed: 0, banter: 0, op: 0 },
+      });
+    }
+
     if (body.action === "claim_badge") {
       if (userId) {
         await r.sadd("fg:insiders", userId);
