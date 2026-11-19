@@ -185,11 +185,22 @@ export default function AIShowcasePage() {
                     boxShadow: "0 2px 10px rgba(0,0,0,0.04)",
                   }}
                 >
-                  <img
-                    src="https://github.com/himanshujainpro.png"
-                    alt="Himanshu Jain"
-                    style={{ width: "26px", height: "26px", borderRadius: "50%", objectFit: "cover" }}
-                  />
+                  <div
+                    style={{
+                      width: "26px",
+                      height: "26px",
+                      borderRadius: "50%",
+                      background: "linear-gradient(135deg, #4871C5, #BC0070)",
+                      color: "#fff",
+                      fontSize: "11px",
+                      fontWeight: 800,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    HJ
+                  </div>
                   <span style={{ fontSize: "13px", fontWeight: 700, color: "var(--text-main)" }}>
                     Himanshu Jain
                   </span>
@@ -966,29 +977,39 @@ export default function AIShowcasePage() {
                 }}
               >
                 <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
-                  <img
-                    src="https://github.com/himanshujainpro.png"
-                    alt="Himanshu"
-                    style={{ width: "48px", height: "48px", borderRadius: "50%", border: "2px solid var(--brand-pink)" }}
-                  />
+                  <div
+                    style={{
+                      width: "48px",
+                      height: "48px",
+                      borderRadius: "50%",
+                      background: "linear-gradient(135deg, #4871C5, #BC0070)",
+                      color: "#fff",
+                      fontSize: "18px",
+                      fontWeight: 800,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      border: "2px solid var(--brand-pink)",
+                      boxShadow: "0 4px 12px rgba(188,0,112,0.2)",
+                    }}
+                  >
+                    HJ
+                  </div>
                   <div>
                     <div style={{ fontWeight: 800, fontSize: "15px", color: "var(--text-main)" }}>
                       Want to set up AI pairing for your service?
                     </div>
                     <div style={{ fontSize: "13px", color: "var(--text-muted)" }}>
-                      Ping Himanshu on Slack or GitHub—happy to run a hands-on pairing session with anyone on the team!
+                      Ping Himanshu on Slack—happy to run a hands-on pairing session with anyone on the team!
                     </div>
                   </div>
                 </div>
-                <a
-                  href="https://github.com/himanshujainpro"
-                  target="_blank"
-                  rel="noopener noreferrer"
+                <div
                   className="btn btn-black btn-sm"
-                  style={{ textDecoration: "none", whiteSpace: "nowrap" }}
+                  style={{ textDecoration: "none", whiteSpace: "nowrap", cursor: "default" }}
                 >
-                  Connect on GitHub ↗
-                </a>
+                  Slack: @himanshu 💬
+                </div>
               </div>
             </div>
 
@@ -1343,7 +1364,7 @@ export default function AIShowcasePage() {
                   }}
                 >
                   <div style={{ color: "#94A3B8", marginBottom: "8px" }}>// The Autonomous Prompting Flow (fa958e09)</div>
-                  <div>1. "need to deploy this from personal github" ➔ Automated git remote configuration</div>
+                  <div>1. "automate CI/CD build and cloud deployment" ➔ Production Vercel pipeline & zero-downtime cache</div>
                   <div>2. "make ui same as scans.ai and branding" ➔ Tokenized design tokens & CSS extraction</div>
                   <div>3. "random colleague to speak instead of writer" ➔ Server-side Bakra roulette algorithm</div>
                   <div>4. "add sound or animation rain effect" ➔ Web Audio synthesizer oscillators & Canvas rain</div>
@@ -1574,15 +1595,12 @@ export default function AIShowcasePage() {
                         I'm hosting pairing sessions for anyone on the team who wants to set up Antigravity, custom skills, or automated testing. Reach out anytime!
                       </div>
                     </div>
-                    <a
-                      href="https://github.com/himanshujainpro"
-                      target="_blank"
-                      rel="noopener noreferrer"
+                    <div
                       className="btn btn-black btn-md"
-                      style={{ textDecoration: "none", whiteSpace: "nowrap" }}
+                      style={{ whiteSpace: "nowrap", cursor: "default" }}
                     >
-                      Connect with Himanshu ↗
-                    </a>
+                      Slack: @himanshu 💬
+                    </div>
                   </div>
                 </div>
               </div>
@@ -1601,11 +1619,22 @@ export default function AIShowcasePage() {
         }}
       >
         <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", fontSize: "13px", color: "var(--text-muted)" }}>
-          <img
-            src="https://github.com/himanshujainpro.png"
-            alt="Himanshu"
-            style={{ width: "20px", height: "20px", borderRadius: "50%" }}
-          />
+          <span
+            style={{
+              width: "20px",
+              height: "20px",
+              borderRadius: "50%",
+              background: "linear-gradient(135deg, #4871C5, #BC0070)",
+              color: "#fff",
+              fontSize: "10px",
+              fontWeight: 700,
+              display: "inline-flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            HJ
+          </span>
           <span>
             Crafted for <strong>Fun Friday</strong> by <strong>Himanshu Jain</strong> with{" "}
             <strong style={{ color: "var(--brand-pink)" }}>Antigravity AI</strong> •{" "}
