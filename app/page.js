@@ -5,6 +5,7 @@ import Link from "next/link";
 import { sounds, triggerGiftRain, triggerFlowerRain, triggerDevStackRain, triggerNameRain, triggerComboRain } from "@/lib/effects";
 import TeamRosterSidebar from "@/components/TeamRosterSidebar";
 import RotatingSquadSquare from "@/components/RotatingSquadSquare";
+import { SCANS_TEAM } from "@/lib/team";
 
 export const dynamic = "force-dynamic";
 
@@ -561,6 +562,34 @@ export default function Home() {
                 </div>
               </div>
             )}
+
+            {/* Quick Squad Selection */}
+            <div style={{ marginBottom: "14px" }}>
+              <label style={{ display: "block", fontSize: "12px", fontWeight: 700, color: "var(--text-main)", marginBottom: "6px" }}>
+                ⭐ Quick Pick from Ride Hailing Squad:
+              </label>
+              <div style={{ display: "flex", gap: "6px", flexWrap: "wrap", maxHeight: "110px", overflowY: "auto", padding: "4px" }}>
+                {SCANS_TEAM.flatMap((g) => g.members).map((m) => (
+                  <button
+                    key={m.id}
+                    type="button"
+                    onClick={() => {
+                      setCgName(m.name);
+                      setCgTitle(m.role);
+                      if (m.avatar) setCgPhotoUrl(m.avatar);
+                      const foundPlayer = d?.players?.find((p) =>
+                        p.name.toLowerCase().includes(m.name.toLowerCase().split(" ")[0])
+                      );
+                      if (foundPlayer) setCgPlayerId(foundPlayer.id);
+                    }}
+                    className={`btn btn-sm ${cgName === m.name ? "btn-gradient" : "btn-outline"}`}
+                    style={{ fontSize: "11px", padding: "3px 8px" }}
+                  >
+                    {m.icon || "⭐"} {m.name}
+                  </button>
+                ))}
+              </div>
+            </div>
 
             <div style={{ marginBottom: "14px" }}>
               <label style={{ display: "block", fontSize: "12px", fontWeight: 700, color: "var(--text-main)", marginBottom: "6px" }}>
@@ -1318,17 +1347,22 @@ export default function Home() {
               {/* Guest Check-in / VIP Entry status */}
               <div style={{ marginTop: "16px" }}>
                 {!me.joined ? (
-                  <button
-                    onClick={() => {
-                      sounds.pop();
-                      act("join");
-                    }}
-                    disabled={isActing}
-                    className="btn btn-black btn-lg"
-                    style={{ width: "100%", maxWidth: "340px", background: "#FFFFFF", color: "#000000" }}
-                  >
-                    🎟️ Join &amp; Claim VIP Pass as {me.name}
-                  </button>
+                  <div>
+                    <button
+                      onClick={() => {
+                        sounds.pop();
+                        act("join");
+                      }}
+                      disabled={isActing}
+                      className="btn btn-black btn-lg"
+                      style={{ width: "100%", maxWidth: "340px", background: "#FFFFFF", color: "#000000" }}
+                    >
+                      🎟️ Join &amp; Claim VIP Pass as {me.name}
+                    </button>
+                    <div style={{ fontSize: "11px", color: "rgba(255, 255, 255, 0.7)", marginTop: "6px" }}>
+                      💡 Attending as Chief Guest or spectator? You can relax and enjoy the live show without entering the draw!
+                    </div>
+                  </div>
                 ) : (
                   <div
                     style={{
@@ -1471,6 +1505,9 @@ export default function Home() {
                 >
                   Join Game as {me.name}
                 </button>
+                <div style={{ fontSize: "12px", color: "var(--text-muted)", marginTop: "8px" }}>
+                  💡 Attending as Chief Guest or spectator? You can relax and enjoy the live inauguration without entering the gift draw!
+                </div>
               </div>
             ) : (
               <>
@@ -2052,8 +2089,8 @@ export default function Home() {
             </span>
           </div>
 
-          {/* Chief Guest VIP Card in the Lobby */}
-          {d.chiefGuest?.assigned && (
+          {/* Chief Guest VIP Card in the Lobby - Only visible once revealed! */}
+          {d.chiefGuest?.assigned && d.chiefGuest?.revealed && (
             <div className="lobby-chief-guest-banner">
               <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
                 <span style={{ fontSize: "24px" }}>👑</span>
@@ -2350,6 +2387,19 @@ export default function Home() {
             <Link href="/ai" style={{ color: "var(--brand-blue)", textDecoration: "none", fontWeight: 600 }}>
               See How It Was Built ↗
             </Link>
+            {(d.inaugurated || d.phase === "drawn") && (
+              <>
+                {" • "}
+                <a
+                  href="https://github.com/himanshujainpro"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{ color: "var(--brand-blue)", textDecoration: "none", fontWeight: 600 }}
+                >
+                  GitHub ↗
+                </a>
+              </>
+            )}
           </span>
         </div>
       </footer>

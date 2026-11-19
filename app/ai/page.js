@@ -1724,6 +1724,19 @@ export default function AIShowcasePage() {
             <Link href="/" style={{ color: "var(--brand-blue)", textDecoration: "none", fontWeight: 600 }}>
               Play Secret Santa 🎁
             </Link>
+            {(gameState?.inaugurated || gameState?.phase === "drawn") && (
+              <>
+                {" • "}
+                <a
+                  href="https://github.com/himanshujainpro"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{ color: "var(--brand-blue)", textDecoration: "none", fontWeight: 600 }}
+                >
+                  GitHub ↗
+                </a>
+              </>
+            )}
           </span>
         </div>
       </footer>
