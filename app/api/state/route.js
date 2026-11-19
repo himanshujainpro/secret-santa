@@ -203,10 +203,22 @@ export async function GET() {
     }
   }
 
+  const myAttendee = {
+    id: me.id,
+    name: me.name,
+    email: me.email || "",
+    seenAt: now,
+    joinedGame: !!players[me.id],
+  };
+  const activeAttendees = [
+    myAttendee,
+    ...(attendees || []).filter((a) => a.id !== me.id),
+  ];
+
   return Response.json({
     now: Date.now(),
     me: { id: me.id, name: me.name, email: me.email, host: me.host, joined: !!players[me.id], isAiInsider: insiderSet.has(me.id) },
-    attendees: me.host ? attendees : undefined,
+    attendees: me.host ? activeAttendees : undefined,
     players: Object.entries(players).map(([id, name]) => ({
       id,
       name,

@@ -565,6 +565,33 @@ export default function Home() {
               </div>
             )}
 
+            {/* Quick Online Attendees Selection */}
+            {d && d.attendees && d.attendees.length > 0 && (
+              <div style={{ marginBottom: "14px" }}>
+                <label style={{ display: "block", fontSize: "12px", fontWeight: 700, color: "var(--text-main)", marginBottom: "6px" }}>
+                  🟢 Currently Online Attendees:
+                </label>
+                <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
+                  {d.attendees.map((a) => (
+                    <button
+                      key={a.id}
+                      type="button"
+                      onClick={() => {
+                        setCgName(a.name);
+                        setCgTitle("Founder & CEO");
+                        setCgPlayerId(a.id);
+                        if (a.email) setCgEmail(a.email);
+                      }}
+                      className={`btn btn-sm ${cgName === a.name ? "btn-gradient" : "btn-outline"}`}
+                      style={{ fontSize: "11px", padding: "3px 8px" }}
+                    >
+                      👑 {a.name} {a.joinedGame ? "(Playing)" : "(Spectating)"}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* Quick Squad Selection */}
             <div style={{ marginBottom: "14px" }}>
               <label style={{ display: "block", fontSize: "12px", fontWeight: 700, color: "var(--text-main)", marginBottom: "6px" }}>
@@ -2222,6 +2249,94 @@ export default function Home() {
                     ✏️ Edit VIP
                   </button>
                 )}
+              </div>
+            </div>
+          )}
+
+          {/* Host View: Real-Time Online Attendees Presence & 1-Click VIP Assign */}
+          {me.host && (
+            <div style={{
+              background: "#F8FAFC",
+              border: "1.5px solid #E2E8F0",
+              borderRadius: "14px",
+              padding: "12px 14px",
+              marginBottom: "16px",
+            }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px", flexWrap: "wrap", gap: "6px" }}>
+                <span style={{ fontSize: "12px", fontWeight: 800, color: "#0F172A", display: "inline-flex", alignItems: "center", gap: "6px" }}>
+                  <span style={{ color: "#10B981" }}>🟢</span> ONLINE SIGNED-IN ATTENDEES ({d.attendees?.length || 1})
+                </span>
+                <span style={{ fontSize: "11px", fontWeight: 700, color: "#64748B" }}>
+                  Host Presence Radar • 1-Click VIP Assign
+                </span>
+              </div>
+              <p style={{ fontSize: "11px", color: "#64748B", margin: "0 0 8px 0" }}>
+                Real-time presence: Anyone marked <strong>[Spectating]</strong> is logged in to the site without having to enter the gift draw. You can assign them as Chief Guest with 1 click!
+              </p>
+              <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
+                {(d.attendees && d.attendees.length > 0
+                  ? d.attendees
+                  : [{ id: me.id, name: me.name, email: me.email, joinedGame: me.joined }]
+                ).map((a) => (
+                  <span
+                    key={a.id}
+                    style={{
+                      background: "#FFFFFF",
+                      border: "1.5px solid #CBD5E1",
+                      borderRadius: "100px",
+                      padding: "3px 10px",
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: "6px",
+                      fontSize: "11px",
+                      boxShadow: "0 1px 3px rgba(0,0,0,0.04)",
+                    }}
+                  >
+                    <span style={{ color: "#10B981", fontSize: "10px" }}>●</span>
+                    <strong>{a.name}</strong>
+                    {a.id === me.id && (
+                      <span style={{ fontSize: "10px", color: "var(--brand-pink)", fontWeight: 700 }}>(You)</span>
+                    )}
+                    {a.joinedGame ? (
+                      <span style={{ fontSize: "9px", color: "#10B981", fontWeight: 700, background: "#ECFDF5", padding: "1px 5px", borderRadius: "100px" }}>
+                        Playing
+                      </span>
+                    ) : (
+                      <span style={{ fontSize: "9px", color: "#64748B", fontWeight: 700, background: "#F1F5F9", padding: "1px 5px", borderRadius: "100px" }}>
+                        Spectating
+                      </span>
+                    )}
+                    {!drawn && a.id !== me.id && (!d.chiefGuest?.assigned || d.chiefGuest.id !== a.id) && (
+                      <button
+                        onClick={() => {
+                          setCgPlayerId(a.id);
+                          setCgName(a.name);
+                          if (a.email) setCgEmail(a.email);
+                          act("set_chief_guest", {
+                            name: a.name,
+                            title: "Founder & CEO",
+                            id: a.id,
+                            email: a.email,
+                          });
+                          showToast(`👑 ${a.name} assigned as Chief Guest!`);
+                        }}
+                        style={{
+                          background: "linear-gradient(135deg, #F59E0B, #D97706)",
+                          color: "#FFFFFF",
+                          border: "none",
+                          fontSize: "10px",
+                          padding: "2px 8px",
+                          borderRadius: "100px",
+                          fontWeight: 700,
+                          cursor: "pointer",
+                        }}
+                        title={`Make ${a.name} Chief Guest`}
+                      >
+                        👑 Make VIP
+                      </button>
+                    )}
+                  </span>
+                ))}
               </div>
             </div>
           )}
