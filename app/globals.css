@@ -1537,3 +1537,144 @@ textarea.text-input {
   border-color: #CBD5E1;
   background: #F1F5F9;
 }
+
+/* -------------------------------------------------------------------------- */
+/* Visual Live Clock & Room Status Ticker                                     */
+/* -------------------------------------------------------------------------- */
+.live-meeting-clock-card {
+  background: linear-gradient(145deg, rgba(15, 23, 42, 0.95) 0%, rgba(30, 4, 18, 0.95) 100%);
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  border-radius: 18px;
+  padding: 16px 20px;
+  margin: 18px auto;
+  max-width: 480px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5), inset 0 0 20px rgba(245, 158, 11, 0.1);
+  text-align: center;
+}
+
+.live-clock-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.live-pulse-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #22C55E;
+  box-shadow: 0 0 10px #22C55E;
+  animation: pulseBeacon 1.5s infinite;
+}
+
+@keyframes pulseBeacon {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.85); }
+}
+
+.live-status-text {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+  color: #86EFAC;
+  text-transform: uppercase;
+  font-family: 'Sora', sans-serif;
+}
+
+.live-clock-digits-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin: 4px 0 8px;
+}
+
+.clock-icon {
+  font-size: 24px;
+}
+
+.live-clock-digits {
+  font-family: 'Sora', monospace;
+  font-size: 32px;
+  font-weight: 900;
+  letter-spacing: 2px;
+  color: #FDE68A;
+  text-shadow: 0 0 20px rgba(245, 158, 11, 0.6);
+}
+
+.live-clock-badge {
+  background: rgba(245, 158, 11, 0.2);
+  border: 1px solid rgba(245, 158, 11, 0.5);
+  border-radius: 6px;
+  font-size: 10px;
+  font-weight: 800;
+  padding: 3px 7px;
+  color: #FDE68A;
+  letter-spacing: 1px;
+}
+
+.live-clock-sub {
+  font-size: 12px;
+  color: #94A3B8;
+  line-height: 1.4;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Heartfelt End-of-Game Tribute Card                                         */
+/* -------------------------------------------------------------------------- */
+.endgame-tribute-card {
+  margin-top: 24px;
+  padding: 26px 22px;
+  background: linear-gradient(135deg, rgba(188, 0, 112, 0.08) 0%, rgba(72, 113, 197, 0.08) 100%);
+  border: 2px solid rgba(188, 0, 112, 0.35);
+  border-radius: 20px;
+  text-align: center;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04);
+}
+
+.tribute-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #FFF1F2;
+  border: 1px solid #FDA4AF;
+  color: #E11D48;
+  font-size: 11px;
+  font-weight: 800;
+  padding: 4px 14px;
+  border-radius: 9999px;
+  letter-spacing: 1px;
+}
+
+.tribute-title {
+  font-size: 22px;
+  font-weight: 800;
+  font-family: 'Sora', sans-serif;
+  color: var(--text-main);
+  margin: 8px 0 12px;
+}
+
+.tribute-body {
+  font-size: 14px;
+  color: var(--text-muted);
+  max-width: 600px;
+  margin: 0 auto 12px;
+  line-height: 1.6;
+}
+
+.tribute-highlight {
+  font-size: 13px;
+  color: var(--text-main);
+  font-weight: 600;
+  max-width: 580px;
+  margin: 0 auto 20px;
+  line-height: 1.5;
+}
+
+.tribute-actions {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}

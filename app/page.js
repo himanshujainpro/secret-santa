@@ -83,6 +83,17 @@ export default function Home() {
   const [cgTitle, setCgTitle] = useState("Founder & CEO");
   const [cgPhotoUrl, setCgPhotoUrl] = useState("");
   const [cgPlayerId, setCgPlayerId] = useState("");
+  const [clockTime, setClockTime] = useState("");
+
+  useEffect(() => {
+    const update = () => {
+      const d = new Date();
+      setClockTime(d.toLocaleTimeString("en-US", { hour12: true }));
+    };
+    update();
+    const interval = setInterval(update, 1000);
+    return () => clearInterval(interval);
+  }, []);
 
   // Refs to track state transitions across polling
   const prevRevealedRef = useRef(false);
@@ -131,10 +142,12 @@ export default function Home() {
       }
       prevRevealedRef.current = !!j.revealed;
 
-      // Check if Winners were just announced
+      // Check if Winners were just announced -> Trigger celebration & prompt emotional review
       if (j.results && !prevResultsRef.current) {
         triggerGiftRain();
         sounds.fanfare();
+        setReviewTarget("Final Event Review");
+        setShowReviewModal(true);
       }
       prevResultsRef.current = j.results;
 
@@ -144,12 +157,11 @@ export default function Home() {
       }
       prevIdxRef.current = j.idx;
 
-      // Check if Inauguration ceremony just happened -> Trigger royal fanfare, applause & teammate name rain
+      // Check if Inauguration ceremony just happened -> Primary High-Volume Crowd Clapping & Teammate Name Rain
       if (j.inaugurated && prevInauguratedRef.current === false) {
         setIsUnveiling(true);
         sounds.snip();
-        sounds.applause(4.5);
-        sounds.shehnaiInauguration();
+        sounds.applause(5.5);
         triggerNameRain(j.players || d?.players, true);
         setTimeout(() => setIsUnveiling(false), 2400);
       }
@@ -254,8 +266,8 @@ export default function Home() {
   const handleCutRibbon = async () => {
     setIsUnveiling(true);
     sounds.snip();
-    sounds.applause(4.5);
-    sounds.shehnaiInauguration();
+    // Clapping is primary & high-volume, no competing sounds
+    sounds.applause(5.5);
     // Ribbon ceremony strictly showers teammate name badges!
     triggerNameRain(d?.players, true);
     await act("inaugurate");
@@ -1134,6 +1146,24 @@ export default function Home() {
                 Meanwhile, shower developer tools, show your support &amp; claim your VIP Pass!
               </p>
 
+              {/* Visual Live Clock & Room Status Ticker */}
+              <div className="live-meeting-clock-card">
+                <div className="live-clock-status">
+                  <span className="live-pulse-dot" />
+                  <span className="live-status-text">ROOM READY • AWAITING INAUGURATION</span>
+                </div>
+
+                <div className="live-clock-digits-wrapper">
+                  <span className="clock-icon">🕒</span>
+                  <span className="live-clock-digits">{clockTime || "LIVE"}</span>
+                  <span className="live-clock-badge">REAL-TIME</span>
+                </div>
+
+                <div className="live-clock-sub">
+                  Fun Friday meeting can start anytime! When Chief Guest cuts the ribbon, celebration begins.
+                </div>
+              </div>
+
               {/* Interactive Live Shower with Mode Selector */}
               <div style={{ margin: "22px 0" }}>
                 <div style={{ display: "flex", justifyContent: "center", marginBottom: "14px" }}>
@@ -2011,23 +2041,68 @@ export default function Home() {
 
             {/* Results Podium if announced */}
             {results && (
-              <div className="podium-box">
-                <div style={{ fontWeight: 800, fontSize: "16px", marginBottom: "12px", fontFamily: "Sora, sans-serif" }}>
-                  🎉 Official Award Winners
+              <>
+                <div className="podium-box">
+                  <div style={{ fontWeight: 800, fontSize: "16px", marginBottom: "12px", fontFamily: "Sora, sans-serif" }}>
+                    🎉 Official Award Winners
+                  </div>
+                  <div className="podium-item">
+                    <span className="podium-award">💡 Most Thoughtful</span>
+                    <span className="podium-winner">{nameOf(results.a)}</span>
+                  </div>
+                  <div className="podium-item">
+                    <span className="podium-award">🤣 Most Ridiculous</span>
+                    <span className="podium-winner">{nameOf(results.b)}</span>
+                  </div>
+                  <div className="podium-item">
+                    <span className="podium-award">🔥 Best Pitch</span>
+                    <span className="podium-winner">{nameOf(results.c)}</span>
+                  </div>
                 </div>
-                <div className="podium-item">
-                  <span className="podium-award">💡 Most Thoughtful</span>
-                  <span className="podium-winner">{nameOf(results.a)}</span>
+
+                {/* Heartfelt End-of-Game Tribute & Emotional Review Prompt */}
+                <div className="endgame-tribute-card">
+                  <div style={{ display: "flex", justifyContent: "center", marginBottom: "12px" }}>
+                    <div className="tribute-badge">
+                      <span>❤️</span> A SPECIAL NOTE FOR TEAM SCANS.AI
+                    </div>
+                  </div>
+
+                  <h3 className="tribute-title">
+                    What a Historic Fun Friday! 🎉
+                  </h3>
+
+                  <p className="tribute-body">
+                    Every pitch, every laugh, and every thoughtful surprise made this Secret Santa 2050 truly unforgettable.
+                    Over the last <strong>48 sleepless hours</strong>, this platform was crafted with deep heart, engineering passion, and Antigravity AI specifically for our incredible team.
+                  </p>
+
+                  <p className="tribute-highlight">
+                    If you enjoyed today's session, it would mean the world to us if you could drop an honest anonymous review below and check out the story behind how AI powered this entire experience.
+                  </p>
+
+                  <div className="tribute-actions">
+                    <button
+                      onClick={() => {
+                        setReviewTarget("Final Event Review");
+                        setShowReviewModal(true);
+                      }}
+                      className="btn btn-gradient btn-lg"
+                      style={{ boxShadow: "0 6px 20px rgba(188, 0, 112, 0.45)" }}
+                    >
+                      ⭐ Leave an Anonymous Review (Takes 5s!)
+                    </button>
+
+                    <Link
+                      href="/ai"
+                      className="btn btn-black btn-lg"
+                      style={{ textDecoration: "none", background: "#0F172A", border: "1px solid rgba(255,255,255,0.2)" }}
+                    >
+                      ⚡ Behind the Scenes: How AI Built This (48h Journey) ↗
+                    </Link>
+                  </div>
                 </div>
-                <div className="podium-item">
-                  <span className="podium-award">🤣 Most Ridiculous</span>
-                  <span className="podium-winner">{nameOf(results.b)}</span>
-                </div>
-                <div className="podium-item">
-                  <span className="podium-award">🔥 Best Pitch</span>
-                  <span className="podium-winner">{nameOf(results.c)}</span>
-                </div>
-              </div>
+              </>
             )}
           </div>
         )}
