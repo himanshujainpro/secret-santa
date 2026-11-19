@@ -1,6 +1,6 @@
 "use client";
 import React from "react";
-import { SCANS_TEAM } from "@/lib/team";
+import { SCANS_TEAM, SQUAD_INFO } from "@/lib/team";
 
 export default function TeamRosterSidebar({ chiefGuest, isOpen, onClose }) {
   const isCgRevealed = !!chiefGuest?.revealed;
@@ -15,7 +15,7 @@ export default function TeamRosterSidebar({ chiefGuest, isOpen, onClose }) {
             className="btn btn-outline btn-sm"
             style={{ fontSize: "12px", padding: "4px 10px" }}
           >
-            ✕ Close Team Panel
+            ✕ Close Squad Panel
           </button>
         </div>
       )}
@@ -61,17 +61,17 @@ export default function TeamRosterSidebar({ chiefGuest, isOpen, onClose }) {
         </div>
       </div>
 
-      {/* Team Branding Header: "Our Team is Great!" */}
+      {/* Squad Branding Header: Ride Hailing Squad - The Heart of Scans.ai */}
       <div className="team-branding-box">
         <div className="team-branding-title">
-          <span>🌟</span> SCANS.AI DREAM TEAM (16)
+          <span>🚕</span> {SQUAD_INFO.name.toUpperCase()} ({SQUAD_INFO.memberCount})
         </div>
         <p className="team-branding-subtitle">
-          Our Team is Great • 16 Superstars powering AI automobile inspections &amp; cloud microservices!
+          <strong>{SQUAD_INFO.tagline}</strong> • 17 United Superstars powering the core Ride Hailing inspection engine!
         </p>
       </div>
 
-      {/* Category Groups Ordered by Seniority & Role */}
+      {/* Equal Pods Across Mobile, Backend, QA, and Design */}
       {SCANS_TEAM.map((group) => (
         <div key={group.category} className="team-group-card">
           <div className="team-group-header">
@@ -79,7 +79,7 @@ export default function TeamRosterSidebar({ chiefGuest, isOpen, onClose }) {
             <span>{group.category}</span>
           </div>
 
-          <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: "3px" }}>
             {group.members.map((member) => (
               <div key={member.id} className="team-member-row">
                 <div
@@ -93,9 +93,6 @@ export default function TeamRosterSidebar({ chiefGuest, isOpen, onClose }) {
                   <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "6px" }}>
                     <span className="team-member-name-text">
                       {member.name}
-                    </span>
-                    <span className="team-member-dept-tag">
-                      {member.dept}
                     </span>
                   </div>
 

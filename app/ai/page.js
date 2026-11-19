@@ -182,10 +182,10 @@ export default function AIShowcasePage() {
                 color: showTeamSidebar ? "#BC0070" : "var(--text-main)",
                 borderColor: showTeamSidebar ? "var(--brand-pink)" : "var(--card-border)",
               }}
-              title="View Scans.ai Dream Team & Chief Guest"
+              title="View Ride Hailing Squad & Chief Guest"
             >
-              <span>👥</span>
-              <span>Team (16)</span>
+              <span>🚕</span>
+              <span>Squad (17)</span>
             </button>
 
             <Link href="/" className="header-btn" style={{ textDecoration: "none" }}>

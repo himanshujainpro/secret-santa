@@ -984,10 +984,10 @@ export default function Home() {
                 color: showTeamSidebar ? "#BC0070" : "var(--text-main)",
                 borderColor: showTeamSidebar ? "var(--brand-pink)" : "var(--card-border)",
               }}
-              title="View Scans.ai Dream Team & Chief Guest"
+              title="View Ride Hailing Squad & Chief Guest"
             >
-              <span>👥</span>
-              <span>Team (16)</span>
+              <span>🚕</span>
+              <span>Squad (17)</span>
             </button>
 
             <div className="user-pill" style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}>
