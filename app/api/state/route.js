@@ -48,7 +48,7 @@ async function load() {
     return memoryCache;
   }
   const r = redis();
-  const [st, players, matches, votes, gifts, insiders, flowers, chiefGuestRaw] = await Promise.all([
+  const [st, players, matches, votes, gifts, insiders, flowers, chiefGuestRaw, reviewsRaw] = await Promise.all([
     r.get("fg:state"),
     r.hgetall("fg:players"),
     r.hgetall("fg:matches"),
@@ -57,6 +57,7 @@ async function load() {
     r.smembers("fg:insiders"),
     r.get("fg:flowers"),
     r.get("fg:chief_guest"),
+    r.lrange("fg:reviews", 0, 49),
   ]);
   const insiderList = Array.isArray(insiders) ? insiders : [];
   let chiefGuest = null;
@@ -65,6 +66,14 @@ async function load() {
       chiefGuest = typeof chiefGuestRaw === "string" ? JSON.parse(chiefGuestRaw) : chiefGuestRaw;
     } catch {
       chiefGuest = null;
+    }
+  }
+  const reviews = [];
+  if (Array.isArray(reviewsRaw)) {
+    for (const item of reviewsRaw) {
+      try {
+        reviews.push(typeof item === "string" ? JSON.parse(item) : item);
+      } catch {}
     }
   }
   const data = {
@@ -76,6 +85,7 @@ async function load() {
     insiders: insiderList,
     flowers: parseInt(flowers || "0", 10),
     chiefGuest,
+    reviews,
   };
   memoryCache = data;
   cacheExpiresAt = now + 1200; // 1.2s TTL
@@ -86,7 +96,7 @@ async function load() {
 export async function GET() {
   const me = await who();
   if (!me) return Response.json({ error: "auth" }, { status: 401 });
-  const { st, players, matches, votes, gifts, insiders, flowers, chiefGuest } = await load();
+  const { st, players, matches, votes, gifts, insiders, flowers, chiefGuest, reviews } = await load();
   const drawn = st.phase === "drawn";
 
   // Active gift on the live stage (anonymous - author ID is never attached)
@@ -162,6 +172,7 @@ export async function GET() {
     activeGift,
     myVotes: votes[me.id] || null,
     votesIn: me.host ? Object.keys(votes).length : null,
+    reviews: reviews || [],
   });
 }
 
@@ -324,8 +335,45 @@ export async function POST(req) {
       return t ? t[0] : "";
     };
     await save({ results: { a: top("a"), b: top("b"), c: top("c") } });
+  } else if (A === "review") {
+    const stars = Math.max(1, Math.min(5, parseInt(b.stars || "5", 10)));
+    const comment = (b.comment || "").trim().slice(0, 300);
+    const target = (b.target || "event").slice(0, 60);
+    if (!comment && !stars) return bad("Rating or comment required.");
+
+    const ANONYMOUS_MONIKERS = [
+      "Anonymous Colleague",
+      "Secret Santa",
+      "Mystery Elf",
+      "Festive Sleuth",
+      "Anonymous Coder",
+      "Holiday Insider",
+      "Incognito Teammate",
+      "Silent Santa",
+    ];
+    const moniker = ANONYMOUS_MONIKERS[Math.floor(Math.random() * ANONYMOUS_MONIKERS.length)];
+
+    const reviewItem = {
+      id: `rev_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+      stars,
+      comment,
+      target,
+      moniker,
+      ts: Date.now(),
+    };
+    // 100% Anonymous: Zero user identifiers are saved to preserve total privacy!
+    await r.lpush("fg:reviews", JSON.stringify(reviewItem));
+    await r.ltrim("fg:reviews", 0, 99);
+    invalidateMemoryCache();
+    return Response.json({ ok: true, review: reviewItem });
   } else if (A === "reset") {
-    await Promise.all([r.del("fg:state"), r.del("fg:matches"), r.del("fg:votes"), r.del("fg:gifts")]);
+    await Promise.all([
+      r.del("fg:state"),
+      r.del("fg:matches"),
+      r.del("fg:votes"),
+      r.del("fg:gifts"),
+      r.del("fg:reviews"),
+    ]);
     invalidateMemoryCache();
   } else if (A === "nuclear_reset") {
     await Promise.all([
@@ -335,6 +383,7 @@ export async function POST(req) {
       r.del("fg:gifts"),
       r.del("fg:flowers"),
       r.del("fg:chief_guest"),
+      r.del("fg:reviews"),
     ]);
     invalidateMemoryCache();
     return Response.json({ ok: true, cleared: true });

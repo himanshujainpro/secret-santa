@@ -40,6 +40,15 @@ function getInitials(name) {
   return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
 }
 
+function formatRelativeTime(ts) {
+  if (!ts) return "Just now";
+  const diff = Math.floor((Date.now() - ts) / 1000);
+  if (diff < 60) return "Just now";
+  if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+  if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
+  return `${Math.floor(diff / 86400)}d ago`;
+}
+
 export default function Home() {
   const [d, setD] = useState(null);
   const [auth, setAuth] = useState(true);
@@ -58,6 +67,15 @@ export default function Home() {
   const [isActing, setIsActing] = useState(false);
   const [isUnveiling, setIsUnveiling] = useState(false);
   const [showerMode, setShowerMode] = useState("names"); // 'names' | 'tech' | 'flowers' | 'mix'
+
+  // Anonymous Rate & Review State
+  const [showReviewModal, setShowReviewModal] = useState(false);
+  const [reviewStars, setReviewStars] = useState(5);
+  const [hoverStars, setHoverStars] = useState(0);
+  const [reviewComment, setReviewComment] = useState("");
+  const [reviewTarget, setReviewTarget] = useState("event");
+  const [reviewSubmitting, setReviewSubmitting] = useState(false);
+  const [reviewSubmitted, setReviewSubmitted] = useState(false);
 
   // Chief Guest Setup & Suspense State
   const [showCgModal, setShowCgModal] = useState(false);
@@ -126,10 +144,11 @@ export default function Home() {
       }
       prevIdxRef.current = j.idx;
 
-      // Check if Inauguration ceremony just happened -> Trigger royal fanfare & teammate name rain
+      // Check if Inauguration ceremony just happened -> Trigger royal fanfare, applause & teammate name rain
       if (j.inaugurated && prevInauguratedRef.current === false) {
         setIsUnveiling(true);
         sounds.snip();
+        sounds.applause(4.5);
         sounds.shehnaiInauguration();
         triggerNameRain(j.players || d?.players, true);
         setTimeout(() => setIsUnveiling(false), 2400);
@@ -235,6 +254,7 @@ export default function Home() {
   const handleCutRibbon = async () => {
     setIsUnveiling(true);
     sounds.snip();
+    sounds.applause(4.5);
     sounds.shehnaiInauguration();
     // Ribbon ceremony strictly showers teammate name badges!
     triggerNameRain(d?.players, true);
@@ -242,6 +262,33 @@ export default function Home() {
     setTimeout(() => {
       setIsUnveiling(false);
     }, 2400);
+  };
+
+  const handleSubmitReview = async (e) => {
+    if (e) e.preventDefault();
+    if (!reviewComment.trim() && !reviewStars) {
+      setErrorMsg("Please select a star rating or write a comment.");
+      return;
+    }
+    setReviewSubmitting(true);
+    try {
+      await act("review", {
+        stars: reviewStars,
+        comment: reviewComment,
+        target: reviewTarget,
+      });
+      sounds.pop();
+      setReviewSubmitted(true);
+      showToast("Anonymous review submitted! Thank you! ⭐");
+      setTimeout(() => {
+        setReviewComment("");
+        setReviewSubmitted(false);
+      }, 2500);
+    } catch {
+      setErrorMsg("Failed to submit review.");
+    } finally {
+      setReviewSubmitting(false);
+    }
   };
 
   const handleShowerFlowers = async () => {
@@ -271,6 +318,155 @@ export default function Home() {
     triggerComboRain(d?.players, true);
     await act("reveal_chief_guest");
     showToast("Chief Guest revealed to everyone with fanfare! 🌟");
+  };
+
+  // ---------------------------------------------------------------------------
+  // Anonymous Rate & Review Modal
+  // ---------------------------------------------------------------------------
+  const renderReviewModal = () => {
+    if (!showReviewModal) return null;
+    const reviewList = d?.reviews || [];
+    const avgRating = reviewList.length > 0
+      ? (reviewList.reduce((acc, r) => acc + (r.stars || 5), 0) / reviewList.length).toFixed(1)
+      : null;
+
+    return (
+      <div className="modal-overlay" onClick={() => setShowReviewModal(false)}>
+        <div className="modal-content review-modal-card" onClick={(e) => e.stopPropagation()}>
+          <button className="modal-close-btn" onClick={() => setShowReviewModal(false)}>✕</button>
+
+          <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "6px" }}>
+            <span className="event-badge">⭐ 100% Anonymous Review</span>
+          </div>
+
+          <h2 style={{ fontSize: "20px", fontWeight: 800, marginBottom: "4px", color: "var(--text-main)" }}>
+            Rate &amp; Review ✨
+          </h2>
+          <p style={{ color: "var(--text-muted)", fontSize: "13px", marginBottom: "12px" }}>
+            {reviewTarget === "event" || reviewTarget === "inauguration"
+              ? "Share your honest star rating and review for Secret Santa 2050!"
+              : `Reviewing: ${reviewTarget}`}
+          </p>
+
+          <div className="review-privacy-banner">
+            <span style={{ fontSize: "18px" }}>🔒</span>
+            <div>
+              <strong>Complete Anonymity:</strong> Zero identity tracking. No names, IDs, or emails are saved with your feedback!
+            </div>
+          </div>
+
+          {/* Interactive 5-Star Rating Selector */}
+          <div style={{ textAlign: "center", margin: "20px 0 16px" }}>
+            <div className="star-rating-row">
+              {[1, 2, 3, 4, 5].map((star) => {
+                const isFilled = (hoverStars || reviewStars) >= star;
+                return (
+                  <button
+                    key={star}
+                    type="button"
+                    className={`star-rating-btn ${isFilled ? "filled" : ""}`}
+                    onMouseEnter={() => setHoverStars(star)}
+                    onMouseLeave={() => setHoverStars(0)}
+                    onClick={() => setReviewStars(star)}
+                    aria-label={`${star} star`}
+                  >
+                    ★
+                  </button>
+                );
+              })}
+            </div>
+            <div className="star-rating-label">
+              {(() => {
+                const current = hoverStars || reviewStars;
+                if (current === 5) return "⭐⭐⭐⭐⭐ Outstanding & Memorable!";
+                if (current === 4) return "⭐⭐⭐⭐ Great Pitch / Idea!";
+                if (current === 3) return "⭐⭐⭐ Good & Fun!";
+                if (current === 2) return "⭐⭐ Fair Attempt";
+                return "⭐ Needs Improvement";
+              })()}
+            </div>
+          </div>
+
+          {/* Comment Form */}
+          <form onSubmit={handleSubmitReview}>
+            <div style={{ marginBottom: "16px" }}>
+              <label style={{ display: "block", fontSize: "12px", fontWeight: 700, color: "var(--text-main)", marginBottom: "6px" }}>
+                Anonymous Comment / Feedback:
+              </label>
+              <textarea
+                value={reviewComment}
+                onChange={(e) => setReviewComment(e.target.value)}
+                placeholder="Share your thoughts, inside jokes, compliments, or suggestions anonymously..."
+                maxLength={300}
+                rows={3}
+                className="text-input"
+                style={{ width: "100%", resize: "none", padding: "10px 14px", fontFamily: "'Inter', sans-serif" }}
+              />
+              <div style={{ display: "flex", justifyContent: "space-between", fontSize: "11px", color: "var(--text-muted)", marginTop: "4px" }}>
+                <span>🔒 Totally anonymous submission</span>
+                <span>{reviewComment.length}/300</span>
+              </div>
+            </div>
+
+            {reviewSubmitted ? (
+              <div className="review-success-badge">
+                ✅ Anonymous review submitted with fanfare!
+              </div>
+            ) : (
+              <button
+                type="submit"
+                disabled={reviewSubmitting}
+                className="btn btn-gradient btn-lg"
+                style={{ width: "100%", justifyContent: "center" }}
+              >
+                {reviewSubmitting ? "Submitting..." : "🌟 Submit Anonymous Review"}
+              </button>
+            )}
+          </form>
+
+          {/* Live Anonymous Reviews Feed */}
+          {reviewList.length > 0 && (
+            <div style={{ marginTop: "22px", borderTop: "1px solid rgba(0, 0, 0, 0.08)", paddingTop: "14px" }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "10px" }}>
+                <span style={{ fontSize: "13px", fontWeight: 800, color: "var(--text-main)" }}>
+                  Recent Anonymous Reviews ({reviewList.length})
+                </span>
+                {avgRating && (
+                  <span style={{ fontSize: "12px", fontWeight: 800, color: "#F59E0B" }}>
+                    ★ {avgRating} / 5.0 Rating
+                  </span>
+                )}
+              </div>
+
+              <div className="reviews-feed-list">
+                {reviewList.slice(0, 10).map((rev) => (
+                  <div key={rev.id || Math.random()} className="review-feed-item">
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                        <span style={{ color: "#F59E0B", fontSize: "13px", letterSpacing: "1px" }}>
+                          {"★".repeat(rev.stars || 5)}{"☆".repeat(5 - (rev.stars || 5))}
+                        </span>
+                        <span style={{ fontSize: "12px", fontWeight: 700, color: "var(--text-main)" }}>
+                          {rev.moniker || "Anonymous Colleague"}
+                        </span>
+                      </div>
+                      <span style={{ fontSize: "11px", color: "var(--text-muted)" }}>
+                        {formatRelativeTime(rev.ts)}
+                      </span>
+                    </div>
+                    {rev.comment && (
+                      <div style={{ fontSize: "13px", color: "var(--text-muted)", marginTop: "4px", lineHeight: "1.4" }}>
+                        "{rev.comment}"
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    );
   };
 
   // ---------------------------------------------------------------------------
@@ -670,6 +866,7 @@ export default function Home() {
     <div>
       {renderRulesModal()}
       {renderChiefGuestModal()}
+      {renderReviewModal()}
       {toastMsg && <div className="toast-bar">{toastMsg}</div>}
 
       {/* Sleek Top Navbar */}
@@ -710,6 +907,18 @@ export default function Home() {
 
             <button className="header-btn" onClick={copyGameLink}>
               📋 Copy Link
+            </button>
+
+            <button
+              className="header-btn"
+              onClick={() => {
+                setReviewTarget("event");
+                setShowReviewModal(true);
+              }}
+              style={{ color: "#F59E0B", fontWeight: 700 }}
+              title="Leave an anonymous star rating & comment"
+            >
+              ⭐ Rate &amp; Review ({d?.reviews?.length || 0})
             </button>
 
             <div className="user-pill" style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}>
@@ -1028,6 +1237,16 @@ export default function Home() {
                 >
                   📖 Rules &amp; How to Play
                 </button>
+                <button
+                  onClick={() => {
+                    setReviewTarget("inauguration");
+                    setShowReviewModal(true);
+                  }}
+                  className="btn btn-outline btn-sm"
+                  style={{ borderColor: "rgba(245, 158, 11, 0.6)", color: "#FDE68A" }}
+                >
+                  ⭐ Rate Ceremony ({d?.reviews?.length || 0})
+                </button>
                 <Link
                   href="/ai"
                   className="btn btn-outline btn-sm"
@@ -1081,7 +1300,7 @@ export default function Home() {
                 </button>
               </div>
 
-              <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
                 <button
                   onClick={handleShowerFlowers}
                   disabled={isActing}
@@ -1095,6 +1314,16 @@ export default function Home() {
                 <div className="shower-counter-pill" title="Total celebrations showered">
                   <span>✨</span> {d.flowerCount || 0}
                 </div>
+                <button
+                  onClick={() => {
+                    setReviewTarget("event");
+                    setShowReviewModal(true);
+                  }}
+                  className="btn-rate-review"
+                  title="Leave an anonymous star rating & comment"
+                >
+                  ⭐ Rate &amp; Review ({d?.reviews?.length || 0})
+                </button>
               </div>
             </div>
             {/* Phase / Lobby Card with Join & Leave Options */}
@@ -1414,6 +1643,18 @@ export default function Home() {
                     )}
                     <div style={{ fontSize: "12px", color: "var(--text-muted)", marginTop: "10px", fontWeight: 600 }}>
                       👉 <strong>{nameOf(readerId || currentReceiverId)}</strong>, read this aloud! <strong>{nameOf(currentReceiverId)}</strong>, guess who in the team came up with this!
+                    </div>
+
+                    <div style={{ marginTop: "12px", display: "flex", justifyContent: "center" }}>
+                      <button
+                        onClick={() => {
+                          setReviewTarget(activeGift.title || "Current Pitch");
+                          setShowReviewModal(true);
+                        }}
+                        className="btn-rate-review"
+                      >
+                        ⭐ Rate &amp; Review this Pitch (Anonymous)
+                      </button>
                     </div>
                   </div>
                 ) : (
