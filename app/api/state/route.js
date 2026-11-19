@@ -30,7 +30,7 @@ async function who() {
   const s = await getServerSession(authOptions);
   const email = s?.user?.email?.toLowerCase();
   if (!email) return null;
-  return { id: idOf(email), name: s.user.name || email.split("@")[0], host: HOSTS.includes(email) };
+  return { id: idOf(email), name: s.user.name || email.split("@")[0], email, host: HOSTS.includes(email) };
 }
 
 // In-memory read-through cache (1.2s TTL) to reduce Upstash Redis calls by ~95% during peak polling
@@ -48,7 +48,7 @@ async function load() {
     return memoryCache;
   }
   const r = redis();
-  const [st, players, matches, votes, gifts, insiders, flowers, chiefGuestRaw, reviewsRaw] = await Promise.all([
+  const [st, players, matches, votes, gifts, insiders, flowers, chiefGuestRaw, reviewsRaw, attendeesRaw] = await Promise.all([
     r.get("fg:state"),
     r.hgetall("fg:players"),
     r.hgetall("fg:matches"),
@@ -58,6 +58,7 @@ async function load() {
     r.get("fg:flowers"),
     r.get("fg:chief_guest"),
     r.lrange("fg:reviews", 0, 49),
+    r.hgetall("fg:attendees"),
   ]);
   const insiderList = Array.isArray(insiders) ? insiders : [];
   let chiefGuest = null;
@@ -76,6 +77,24 @@ async function load() {
       } catch {}
     }
   }
+  const attendeesList = [];
+  if (attendeesRaw && typeof attendeesRaw === "object") {
+    const cutoff = now - 15 * 60 * 1000;
+    for (const raw of Object.values(attendeesRaw)) {
+      try {
+        const item = typeof raw === "string" ? JSON.parse(raw) : raw;
+        if (item && item.seenAt > cutoff) {
+          attendeesList.push({
+            id: item.id,
+            name: item.name,
+            email: item.email || "",
+            seenAt: item.seenAt,
+            joinedGame: !!(players && players[item.id]),
+          });
+        }
+      } catch {}
+    }
+  }
   const data = {
     st: st || { phase: "lobby", inaugurated: false },
     players: players || {},
@@ -86,6 +105,7 @@ async function load() {
     flowers: parseInt(flowers || "0", 10),
     chiefGuest,
     reviews,
+    attendees: attendeesList,
   };
   memoryCache = data;
   cacheExpiresAt = now + 1200; // 1.2s TTL
@@ -96,8 +116,18 @@ async function load() {
 export async function GET() {
   const me = await who();
   if (!me) return Response.json({ error: "auth" }, { status: 401 });
-  const { st, players, matches, votes, gifts, insiders, flowers, chiefGuest, reviews } = await load();
+  const { st, players, matches, votes, gifts, insiders, flowers, chiefGuest, reviews, attendees } = await load();
   const drawn = st.phase === "drawn";
+
+  // Debounced heartbeat to track online attendees (every 25s per user)
+  const now = Date.now();
+  if (typeof global.lastSeen === "undefined") global.lastSeen = {};
+  if (!global.lastSeen[me.id] || now - global.lastSeen[me.id] > 25000) {
+    global.lastSeen[me.id] = now;
+    redis().hset("fg:attendees", {
+      [me.id]: JSON.stringify({ id: me.id, name: me.name, email: me.email || "", seenAt: now })
+    }).catch(() => {});
+  }
 
   // Active gift on the live stage (anonymous - author ID is never attached)
   let activeGift = null;
@@ -125,6 +155,21 @@ export async function GET() {
 
   const insiderSet = new Set(insiders || []);
 
+  // Matching check: Is currently authenticated user the assigned Chief Guest?
+  // Matches by ID, email, or name so Chief Guest NEVER has to click 'join game' to be recognized!
+  const isCgMatch = !!(
+    chiefGuest &&
+    chiefGuest.assigned &&
+    (
+      (chiefGuest.id && chiefGuest.id === me.id) ||
+      (chiefGuest.email && me.email && chiefGuest.email.toLowerCase() === me.email.toLowerCase()) ||
+      (chiefGuest.name && me.name && (
+        chiefGuest.name.toLowerCase().trim() === me.name.toLowerCase().trim() ||
+        chiefGuest.name.toLowerCase().split(" ")[0] === me.name.toLowerCase().split(" ")[0]
+      ))
+    )
+  );
+
   // SECURITY GUARD FOR FE TEAM: Server-side projection of Chief Guest
   let clientChiefGuest = null;
   if (chiefGuest && chiefGuest.assigned) {
@@ -136,20 +181,32 @@ export async function GET() {
         name: chiefGuest.name || "Chief Guest",
         title: chiefGuest.title || "Founder & CEO",
         photoUrl: chiefGuest.photoUrl || "",
-        isMe: chiefGuest.id === me.id,
+        isMe: isCgMatch,
+      };
+    } else if (isCgMatch) {
+      // The Chief Guest themselves can see their VIP role before public reveal!
+      clientChiefGuest = {
+        assigned: true,
+        revealed: false,
+        name: chiefGuest.name,
+        title: chiefGuest.title || "VIP Guest",
+        photoUrl: chiefGuest.photoUrl || "",
+        isMe: true,
       };
     } else {
       // Unrevealed state for non-hosts: Omit all identity details completely
       clientChiefGuest = {
         assigned: true,
         revealed: false,
+        isMe: false,
       };
     }
   }
 
   return Response.json({
     now: Date.now(),
-    me: { id: me.id, name: me.name, host: me.host, joined: !!players[me.id], isAiInsider: insiderSet.has(me.id) },
+    me: { id: me.id, name: me.name, email: me.email, host: me.host, joined: !!players[me.id], isAiInsider: insiderSet.has(me.id) },
+    attendees: me.host ? attendees : undefined,
     players: Object.entries(players).map(([id, name]) => ({
       id,
       name,
@@ -191,7 +248,17 @@ export async function POST(req) {
     invalidateMemoryCache();
   };
 
-  const isChiefGuest = chiefGuest && chiefGuest.revealed && chiefGuest.id === me.id;
+  const isChiefGuest = !!(
+    chiefGuest &&
+    (
+      (chiefGuest.id && chiefGuest.id === me.id) ||
+      (chiefGuest.email && me.email && chiefGuest.email.toLowerCase() === me.email.toLowerCase()) ||
+      (chiefGuest.name && me.name && (
+        chiefGuest.name.toLowerCase().trim() === me.name.toLowerCase().trim() ||
+        chiefGuest.name.toLowerCase().split(" ")[0] === me.name.toLowerCase().split(" ")[0]
+      ))
+    )
+  );
   const hostOnly = [
     "remove",
     "draw",
@@ -223,6 +290,7 @@ export async function POST(req) {
     const cgTitle = (b.title || "Founder & CEO").trim().slice(0, 100);
     const cgPhoto = (b.photoUrl || "").trim().slice(0, 500);
     const cgId = (b.id || "").trim();
+    const cgEmail = (b.email || "").trim().toLowerCase();
     if (!cgName) return bad("Please enter Chief Guest name.");
     const cgData = {
       assigned: true,
@@ -231,6 +299,7 @@ export async function POST(req) {
       title: cgTitle,
       photoUrl: cgPhoto,
       id: cgId,
+      email: cgEmail,
     };
     await r.set("fg:chief_guest", JSON.stringify(cgData));
     invalidateMemoryCache();

@@ -87,6 +87,7 @@ export default function Home() {
   const [cgTitle, setCgTitle] = useState("Founder & CEO");
   const [cgPhotoUrl, setCgPhotoUrl] = useState("");
   const [cgPlayerId, setCgPlayerId] = useState("");
+  const [cgEmail, setCgEmail] = useState("");
   const [showTeamSidebar, setShowTeamSidebar] = useState(false);
   const [clockTime, setClockTime] = useState("");
 
@@ -333,6 +334,7 @@ export default function Home() {
       title: cgTitle,
       photoUrl: cgPhotoUrl,
       id: cgPlayerId,
+      email: cgEmail,
     });
     setShowCgModal(false);
     showToast("Chief Guest successfully assigned! 👑");
@@ -577,6 +579,7 @@ export default function Home() {
                       setCgName(m.name);
                       setCgTitle(m.role);
                       if (m.avatar) setCgPhotoUrl(m.avatar);
+                      if (m.email) setCgEmail(m.email);
                       const foundPlayer = d?.players?.find((p) =>
                         p.name.toLowerCase().includes(m.name.toLowerCase().split(" ")[0])
                       );
@@ -1344,6 +1347,34 @@ export default function Home() {
                 </span>
               </div>
 
+              {/* Chief Guest VIP Personal Welcome Banner */}
+              {d.chiefGuest?.isMe && (
+                <div style={{
+                  background: "linear-gradient(135deg, rgba(245, 158, 11, 0.25), rgba(217, 119, 6, 0.35))",
+                  border: "2px solid #F59E0B",
+                  borderRadius: "16px",
+                  padding: "16px 20px",
+                  margin: "16px auto",
+                  maxWidth: "460px",
+                  textAlign: "center",
+                  boxShadow: "0 8px 24px rgba(245, 158, 11, 0.2)",
+                }}>
+                  <div style={{ fontSize: "32px", marginBottom: "4px" }}>👑</div>
+                  <div style={{ fontSize: "11px", fontWeight: 800, color: "#FDE68A", textTransform: "uppercase", letterSpacing: "0.08em" }}>
+                    CHIEF GUEST OF HONOUR
+                  </div>
+                  <div style={{ fontSize: "18px", fontWeight: 800, color: "#FFFFFF", margin: "4px 0" }}>
+                    Welcome, {d.chiefGuest.name}!
+                  </div>
+                  <p style={{ fontSize: "13px", color: "rgba(255, 255, 255, 0.9)", margin: "4px 0 10px", lineHeight: 1.4 }}>
+                    You are presiding as our VIP Chief Guest! When the ceremony begins, you will inaugurate Fun Friday 2050 by cutting the virtual ribbon.
+                  </p>
+                  <div style={{ fontSize: "11px", color: "#FEF3C7", background: "rgba(0, 0, 0, 0.25)", padding: "6px 12px", borderRadius: "8px", fontWeight: 600 }}>
+                    ✨ You do not need to enter the gift draw unless you wish to play. Relax &amp; enjoy the ceremony!
+                  </div>
+                </div>
+              )}
+
               {/* Guest Check-in / VIP Entry status */}
               <div style={{ marginTop: "16px" }}>
                 {!me.joined ? (
@@ -2034,6 +2065,7 @@ export default function Home() {
                         setCgTitle(d.chiefGuest.title || "Founder & CEO");
                         setCgPhotoUrl(d.chiefGuest.photoUrl || "");
                         setCgPlayerId(d.chiefGuest.id || "");
+                        setCgEmail(d.chiefGuest.email || "");
                       }
                       setShowCgModal(true);
                     }}
@@ -2072,6 +2104,67 @@ export default function Home() {
                   <span style={{ color: d.chiefGuest.revealed ? "#10B981" : "#F59E0B", fontWeight: 700 }}>
                     {d.chiefGuest.revealed ? "Revealed to All (Public)" : "Mystery Silhouette (Redacted on server for non-hosts)"}
                   </span>
+                </div>
+              )}
+
+              {/* Signed-in Online Attendees (Presence) */}
+              {d.attendees && d.attendees.length > 0 && (
+                <div style={{ marginTop: "12px", background: "rgba(0,0,0,0.03)", padding: "10px 12px", borderRadius: "10px" }}>
+                  <div style={{ fontSize: "11px", fontWeight: 700, color: "var(--text-muted)", marginBottom: "6px" }}>
+                    🟢 ONLINE SIGNED-IN ATTENDEES ({d.attendees.length}):
+                  </div>
+                  <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
+                    {d.attendees.map((a) => (
+                      <span
+                        key={a.id}
+                        style={{
+                          fontSize: "11px",
+                          background: "#fff",
+                          border: "1px solid var(--card-border)",
+                          padding: "3px 8px",
+                          borderRadius: "100px",
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: "5px",
+                        }}
+                      >
+                        <span style={{ color: "#10B981" }}>●</span>
+                        <strong>{a.name}</strong>
+                        {a.joinedGame ? (
+                          <span style={{ fontSize: "10px", color: "#10B981" }}>[Playing]</span>
+                        ) : (
+                          <span style={{ fontSize: "10px", color: "#64748B" }}>[Spectating]</span>
+                        )}
+                        {!drawn && (!d.chiefGuest?.assigned || d.chiefGuest.id !== a.id) && (
+                          <button
+                            onClick={() => {
+                              setCgPlayerId(a.id);
+                              setCgName(a.name);
+                              act("set_chief_guest", {
+                                name: a.name,
+                                title: "Founder & CEO",
+                                id: a.id,
+                                email: a.email,
+                              });
+                              showToast(`👑 ${a.name} assigned as Chief Guest!`);
+                            }}
+                            style={{
+                              background: "none",
+                              border: "none",
+                              cursor: "pointer",
+                              padding: "0 2px",
+                              color: "#F59E0B",
+                              fontWeight: 800,
+                              fontSize: "11px",
+                            }}
+                            title={`Make ${a.name} Chief Guest`}
+                          >
+                            👑 Make VIP
+                          </button>
+                        )}
+                      </span>
+                    ))}
+                  </div>
                 </div>
               )}
             </div>
