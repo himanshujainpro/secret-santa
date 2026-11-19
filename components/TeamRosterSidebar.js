@@ -86,7 +86,18 @@ export default function TeamRosterSidebar({ chiefGuest, isOpen, onClose }) {
                   className="team-member-avatar-badge"
                   style={{ background: member.gradient }}
                 >
-                  {member.initials}
+                  {member.avatar ? (
+                    <img
+                      src={member.avatar}
+                      alt={member.name}
+                      style={{ width: "100%", height: "100%", borderRadius: "50%", objectFit: "cover" }}
+                      onError={(e) => {
+                        e.currentTarget.style.display = "none";
+                      }}
+                    />
+                  ) : (
+                    member.initials
+                  )}
                 </div>
 
                 <div className="team-member-details">

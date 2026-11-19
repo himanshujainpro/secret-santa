@@ -4,6 +4,7 @@ import { signIn, signOut } from "next-auth/react";
 import Link from "next/link";
 import { sounds, triggerGiftRain, triggerFlowerRain, triggerDevStackRain, triggerNameRain, triggerComboRain } from "@/lib/effects";
 import TeamRosterSidebar from "@/components/TeamRosterSidebar";
+import RotatingSquadSquare from "@/components/RotatingSquadSquare";
 
 export const dynamic = "force-dynamic";
 
@@ -1346,6 +1347,9 @@ export default function Home() {
                 )}
               </div>
 
+              {/* Rotating Squad Square Showcase (17 Members) */}
+              <RotatingSquadSquare />
+
               {/* Quick links while waiting */}
               <div style={{ marginTop: "20px", display: "flex", justifyContent: "center", gap: "10px", flexWrap: "wrap" }}>
                 <button
@@ -2297,6 +2301,23 @@ export default function Home() {
             )}
           </div>
         )}
+
+        {/* Humble Pardon Card from the Heart */}
+        <div className="humble-pardon-card">
+          <div className="humble-pardon-header">
+            <span className="humble-pardon-icon">🙏</span>
+            <span className="humble-pardon-badge">A NOTE FROM THE HEART</span>
+          </div>
+          <h3 className="humble-pardon-title">With Warmth, Gratitude &amp; Respect</h3>
+          <p className="humble-pardon-text">
+            We have tried our absolute best to craft a fun, joyous, and memorable Fun Friday session for the entire team! If there were any mistakes, small glitches, or slips along the way, please kindly pardon us. Everything was built with genuine love, camaraderie, and team spirit for our incredible <strong>Ride Hailing Squad</strong>! ❤️🚕
+          </p>
+          <div className="humble-pardon-footer">
+            <span>Crafted with love for the squad</span>
+            <span>•</span>
+            <span>Pardon any mistakes &amp; let&apos;s celebrate together! 🎉</span>
+          </div>
+        </div>
         </main>
 
         <TeamRosterSidebar
