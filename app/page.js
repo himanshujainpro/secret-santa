@@ -2793,6 +2793,9 @@ export default function Home() {
             Crafted for Fun Friday by <strong>Himanshu Jain</strong> with <strong>Antigravity AI</strong> •{" "}
             <Link href="/ai" style={{ color: "var(--brand-blue)", textDecoration: "none", fontWeight: 600 }}>
               See How It Was Built ↗
+            </Link>{" • "}
+            <Link href="/cockpit" style={{ color: "var(--brand-pink)", textDecoration: "none", fontWeight: 700 }}>
+              🚀 Dev Cockpit ↗
             </Link>
             {(d.inaugurated || d.phase === "drawn") && (
               <>

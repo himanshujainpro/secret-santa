@@ -121,6 +121,28 @@ export default function RotatingSquadSquare() {
             &ldquo;{current.highlight}&rdquo;
           </div>
 
+          {current.cockpitUrl && (
+            <div style={{ margin: "4px 0 6px" }}>
+              <a
+                href={current.cockpitUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn btn-gradient btn-sm"
+                style={{
+                  fontSize: "11px",
+                  padding: "3px 10px",
+                  borderRadius: "100px",
+                  textDecoration: "none",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "4px",
+                }}
+              >
+                🚀 Live Dev Cockpit ↗
+              </a>
+            </div>
+          )}
+
           {/* Member Index Counter */}
           <div className="square-counter-text">
             Member {activeIndex + 1} of {members.length}

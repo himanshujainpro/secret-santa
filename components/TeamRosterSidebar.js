@@ -163,6 +163,26 @@ export default function TeamRosterSidebar({ chiefGuest, isOpen, onClose }) {
                       {member.email}
                     </span>
                   )}
+                  {member.cockpitUrl && (
+                    <a
+                      href={member.cockpitUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="btn btn-outline btn-sm"
+                      style={{
+                        fontSize: "9px",
+                        padding: "1px 7px",
+                        borderRadius: "100px",
+                        color: "var(--brand-pink)",
+                        borderColor: "rgba(188, 0, 112, 0.4)",
+                        textDecoration: "none",
+                        fontWeight: 700,
+                        marginLeft: "auto",
+                      }}
+                    >
+                      🚀 Dev Cockpit ↗
+                    </a>
+                  )}
                 </div>
               </div>
             </div>

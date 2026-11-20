@@ -936,7 +936,16 @@ export default function AIShowcasePage() {
                     3. Tracking My AI Velocity Ledger
                   </div>
                   <div style={{ fontSize: "13px", color: "var(--text-muted)", marginTop: "6px" }}>
-                    I track daily diffs, hours saved, and subagent review accuracy. This constant measurement pushes me to move from Level 1 assistance to Level 4 autonomous orchestration.
+                    I track daily diffs, hours saved, and subagent review accuracy with my custom S3-hosted <strong>Developer Cockpit</strong>. This constant measurement pushes me to move from Level 1 assistance to Level 4 autonomous orchestration.
+                  </div>
+                  <div style={{ marginTop: "10px" }}>
+                    <Link
+                      href="/cockpit"
+                      className="btn btn-outline btn-sm"
+                      style={{ fontSize: "11px", padding: "3px 8px", textDecoration: "none", color: "var(--brand-blue)" }}
+                    >
+                      🚀 View Live Cockpit ↗
+                    </Link>
                   </div>
                 </div>
               </div>
@@ -1723,6 +1732,9 @@ export default function AIShowcasePage() {
             <strong style={{ color: "var(--brand-pink)" }}>Antigravity AI</strong> •{" "}
             <Link href="/" style={{ color: "var(--brand-blue)", textDecoration: "none", fontWeight: 600 }}>
               Play Secret Santa 🎁
+            </Link>{" • "}
+            <Link href="/cockpit" style={{ color: "var(--brand-pink)", textDecoration: "none", fontWeight: 700 }}>
+              🚀 Dev Cockpit ↗
             </Link>
             {(gameState?.inaugurated || gameState?.phase === "drawn") && (
               <>
