@@ -24,6 +24,33 @@ const IDEA_SPARKS = [
   "An executive golden trophy for 'Surviving meetings that could have been an email'."
 ];
 
+const EMERGENCY_PITCH_SPARKS = [
+  {
+    title: "AI Monday Standup Hologram Twin",
+    pitch: "An AI clone that attends all 9 AM Monday standups on their behalf, nods attentively, and says 'Working on it!' whenever their name is called.",
+  },
+  {
+    title: "Emergency Caffeine Drone Delivery",
+    pitch: "An automated drone that drops hot espresso on their desk whenever any Teams meeting crosses the 30-minute mark.",
+  },
+  {
+    title: "Arctic Heated Workspace Suit",
+    pitch: "A motorized space suit with built-in electric heaters and tea dispenser to survive the ferocious 21°C office air conditioning.",
+  },
+  {
+    title: "Corporate Buzzword Muter 3000",
+    pitch: "Noise-cancelling headphones that automatically replace phrases like 'let us circle back' and 'synergy' with smooth lo-fi beats.",
+  },
+  {
+    title: "Robotic Ticket High-Five Arm",
+    pitch: "A desktop robotic hand that aggressively high-fives them and plays stadium cheers every time they move a ticket to Done.",
+  },
+  {
+    title: "Golden 'Could Have Been An Email' Trophy",
+    pitch: "A solid golden desk statue awarded for surviving 3 back-to-back status meetings that could have been a 2-line Slack message.",
+  },
+];
+
 function ScansLogo() {
   return (
     <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
@@ -90,6 +117,12 @@ export default function Home() {
   const [cgEmail, setCgEmail] = useState("");
   const [showTeamSidebar, setShowTeamSidebar] = useState(false);
   const [clockTime, setClockTime] = useState("");
+
+  // Stage Pitch Injection State (when giver hasn't submitted yet)
+  const [stagePitchTitle, setStagePitchTitle] = useState("");
+  const [stagePitchBody, setStagePitchBody] = useState("");
+  const [emergencySparkIndex, setEmergencySparkIndex] = useState(0);
+  const [showStageInput, setShowStageInput] = useState(false);
 
   useEffect(() => {
     const update = () => {
@@ -321,6 +354,26 @@ export default function Home() {
   const handleShowerFlowers = async () => {
     triggerCustomShower(showerMode, false);
     await act("flower");
+  };
+
+  const handleUseEmergencyPitch = async (title, pitch) => {
+    sounds.fanfare();
+    await act("submit_stage_pitch", { title, pitch });
+    showToast("🎉 Mystery pitch put on stage!");
+  };
+
+  const handleSaveCustomStagePitch = async (e) => {
+    e.preventDefault();
+    if (!stagePitchTitle.trim()) {
+      setErrorMsg("Please enter a gift title!");
+      return;
+    }
+    sounds.pop();
+    await act("submit_stage_pitch", { title: stagePitchTitle, pitch: stagePitchBody });
+    setStagePitchTitle("");
+    setStagePitchBody("");
+    setShowStageInput(false);
+    showToast("✅ Pitch note saved to live stage!");
   };
 
   const handleSaveChiefGuest = async (e) => {
@@ -1894,8 +1947,145 @@ export default function Home() {
                     </div>
                   </div>
                 ) : (
-                  <div style={{ background: "#F8FAFC", border: "1px dashed #CBD5E1", borderRadius: "14px", padding: "16px", margin: "16px 0", fontSize: "14px", color: "var(--text-muted)" }}>
-                    💬 No written pitch submitted yet — Giver, give a quick verbal hint or drop a clue in chat!
+                  <div style={{
+                    background: "#F8FAFC",
+                    border: "1.5px dashed #CBD5E1",
+                    borderRadius: "16px",
+                    padding: "20px 18px",
+                    margin: "16px 0",
+                    textAlign: "center",
+                  }}>
+                    {myMatch === currentReceiverId ? (
+                      /* Secret Santa View: Giver hasn't submitted yet */
+                      <div>
+                        <div style={{ display: "inline-flex", alignItems: "center", gap: "6px", background: "rgba(188,0,112,0.1)", color: "var(--brand-pink)", padding: "4px 12px", borderRadius: "100px", fontSize: "11px", fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: "8px" }}>
+                          🎁 YOU ARE THE SECRET SANTA!
+                        </div>
+                        <h4 style={{ fontSize: "16px", fontWeight: 800, color: "var(--text-main)", margin: "0 0 6px" }}>
+                          You are gifting to {nameOf(currentReceiverId)}!
+                        </h4>
+                        <p style={{ fontSize: "13px", color: "var(--text-muted)", margin: "0 auto 14px", maxWidth: "420px" }}>
+                          You haven&apos;t submitted a written pitch note yet. Type it below or choose an instant fun spark to put it on the stage right now!
+                        </p>
+                      </div>
+                    ) : (
+                      /* Presenter & Teammates View */
+                      <div>
+                        <div style={{ fontSize: "28px", marginBottom: "6px" }}>⏳</div>
+                        <h4 style={{ fontSize: "16px", fontWeight: 800, color: "var(--text-main)", margin: "0 0 6px" }}>
+                          No Written Pitch Submitted Yet for {nameOf(currentReceiverId)}
+                        </h4>
+                        <p style={{ fontSize: "13px", color: "var(--text-muted)", margin: "0 auto 14px", maxWidth: "440px" }}>
+                          {nameOf(currentReceiverId)}&apos;s secret Santa hasn&apos;t saved a pitch note yet. The giver can give a verbal clue on the call, or you can inject a fun backup pitch below so <strong>{nameOf(readerId || currentReceiverId)}</strong> has something hilarious to pitch on the mic!
+                        </p>
+                      </div>
+                    )}
+
+                    {/* Instant Emergency Idea Spark Card */}
+                    <div style={{
+                      background: "#FFFFFF",
+                      border: "1.5px solid #E2E8F0",
+                      borderRadius: "14px",
+                      padding: "14px 16px",
+                      textAlign: "left",
+                      margin: "0 auto 12px",
+                      maxWidth: "480px",
+                      boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
+                    }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "6px" }}>
+                        <span style={{ fontSize: "11px", fontWeight: 800, color: "var(--brand-blue)", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                          ✨ Instant Fun Idea Spark
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => setEmergencySparkIndex((prev) => (prev + 1) % EMERGENCY_PITCH_SPARKS.length)}
+                          className="btn btn-outline btn-sm"
+                          style={{ fontSize: "11px", padding: "2px 8px" }}
+                        >
+                          🎲 Next Idea
+                        </button>
+                      </div>
+                      <div style={{ fontSize: "15px", fontWeight: 800, color: "var(--text-main)", marginBottom: "4px" }}>
+                        🎁 {EMERGENCY_PITCH_SPARKS[emergencySparkIndex % EMERGENCY_PITCH_SPARKS.length].title}
+                      </div>
+                      <div style={{ fontSize: "13px", color: "var(--text-muted)", fontStyle: "italic", marginBottom: "12px", lineHeight: 1.4 }}>
+                        &ldquo;{EMERGENCY_PITCH_SPARKS[emergencySparkIndex % EMERGENCY_PITCH_SPARKS.length].pitch}&rdquo;
+                      </div>
+                      <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", alignItems: "center" }}>
+                        <button
+                          onClick={() => handleUseEmergencyPitch(
+                            EMERGENCY_PITCH_SPARKS[emergencySparkIndex % EMERGENCY_PITCH_SPARKS.length].title,
+                            EMERGENCY_PITCH_SPARKS[emergencySparkIndex % EMERGENCY_PITCH_SPARKS.length].pitch
+                          )}
+                          disabled={isActing}
+                          className="btn btn-gradient btn-sm"
+                          style={{ padding: "6px 14px", fontSize: "12px" }}
+                        >
+                          🚀 Put This Pitch on Stage!
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setShowStageInput(!showStageInput)}
+                          className="btn btn-outline btn-sm"
+                          style={{ fontSize: "11px", padding: "6px 12px" }}
+                        >
+                          {showStageInput ? "✕ Hide Custom Input" : "✏️ Type Custom Pitch"}
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Custom Inline Pitch Input */}
+                    {showStageInput && (
+                      <form
+                        onSubmit={handleSaveCustomStagePitch}
+                        style={{
+                          background: "#FFFFFF",
+                          border: "1.5px solid var(--brand-pink)",
+                          borderRadius: "14px",
+                          padding: "16px",
+                          textAlign: "left",
+                          margin: "12px auto 0",
+                          maxWidth: "480px",
+                        }}
+                      >
+                        <div style={{ fontSize: "12px", fontWeight: 800, color: "var(--brand-pink)", textTransform: "uppercase", marginBottom: "8px" }}>
+                          ✏️ Write Pitch Note for {nameOf(currentReceiverId)}
+                        </div>
+                        <input
+                          type="text"
+                          className="text-input"
+                          placeholder="Gift Title (e.g. Arctic Heated Suit for Office AC)"
+                          value={stagePitchTitle}
+                          onChange={(e) => setStagePitchTitle(e.target.value)}
+                          style={{ marginBottom: "8px", padding: "8px 12px" }}
+                          required
+                        />
+                        <textarea
+                          className="text-input"
+                          rows={2}
+                          placeholder="Pitch note / why they need it (read aloud on mic)..."
+                          value={stagePitchBody}
+                          onChange={(e) => setStagePitchBody(e.target.value)}
+                          style={{ marginBottom: "10px", padding: "8px 12px" }}
+                        />
+                        <div style={{ display: "flex", gap: "8px" }}>
+                          <button
+                            type="submit"
+                            disabled={isActing || !stagePitchTitle.trim()}
+                            className="btn btn-gradient btn-sm"
+                          >
+                            💾 Save &amp; Reveal on Stage
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setShowStageInput(false)}
+                            className="btn btn-outline btn-sm"
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      </form>
+                    )}
                   </div>
                 )}
 

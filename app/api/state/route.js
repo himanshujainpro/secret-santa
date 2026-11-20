@@ -349,6 +349,22 @@ export async function POST(req) {
     if (!title) return bad("Please enter a gift title.");
     await r.hset("fg:gifts", { [me.id]: JSON.stringify({ title, pitch }) });
     invalidateMemoryCache();
+  } else if (A === "submit_stage_pitch") {
+    if (!drawn) return bad("Not allowed.");
+    const title = (b.title || "").trim().slice(0, 100);
+    const pitch = (b.pitch || "").trim().slice(0, 600);
+    if (!title) return bad("Please enter a gift title.");
+
+    if (!st.order || st.idx < 0 || st.idx >= st.order.length) {
+      return bad("No active receiver on stage.");
+    }
+    const recv = st.order[st.idx];
+    const matchGiver = Object.keys(matches).find((k) => matches[k] === recv);
+    const targetGiverId = matchGiver || me.id;
+
+    await r.hset("fg:gifts", { [targetGiverId]: JSON.stringify({ title, pitch }) });
+    invalidateMemoryCache();
+    return Response.json({ ok: true, activeGift: { title, pitch } });
   } else if (A === "remove") {
     if (drawn) return bad("Reset the draw first.");
     await r.hdel("fg:players", String(b.id));
