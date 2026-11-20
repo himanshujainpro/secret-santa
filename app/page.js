@@ -2226,6 +2226,22 @@ export default function Home() {
 
                 <button
                   onClick={() => {
+                    if (confirm("Reveal ALL Secret Santa matches to everyone at once right now?")) {
+                      sounds.fanfare();
+                      triggerComboRain(d?.players, true);
+                      act("reveal_all");
+                    }
+                  }}
+                  disabled={!drawn || d.allRevealed || isActing}
+                  className="btn btn-outline"
+                  style={{ borderColor: "#E11D48", color: "#E11D48", fontWeight: 700 }}
+                  title="Reveal all secret pairings to the entire team at once"
+                >
+                  💥 Reveal All at Once!
+                </button>
+
+                <button
+                  onClick={() => {
                     sounds.fanfare();
                     triggerNameRain(d?.players, true);
                     act("announce");
@@ -2397,6 +2413,70 @@ export default function Home() {
           </div>
         )}
           </>
+        )}
+
+        {/* Grand Reveal Section: All Secret Santas Revealed At Once */}
+        {d.allRevealed && (
+          <div
+            className="card"
+            style={{
+              padding: "24px",
+              background: "linear-gradient(135deg, #FFFFFF 0%, #FFF1F2 100%)",
+              border: "2px solid #FB7185",
+              borderRadius: "16px",
+              boxShadow: "0 10px 25px rgba(225, 29, 72, 0.1)",
+              marginBottom: "20px",
+            }}
+          >
+            <div style={{ textAlign: "center", marginBottom: "20px" }}>
+              <span className="live-pill" style={{ background: "#E11D48", color: "#fff", fontSize: "11px" }}>
+                🎉 GRAND REVEAL FINALE
+              </span>
+              <h3 style={{ fontSize: "22px", fontWeight: 800, fontFamily: "Sora, sans-serif", margin: "8px 0 4px", color: "#9F1239" }}>
+                All Secret Santas Revealed! 🎁✨
+              </h3>
+              <p style={{ fontSize: "13px", color: "var(--text-muted)", margin: 0 }}>
+                Here is the complete reveal of who was Secret Santa for whom across the squad!
+              </p>
+            </div>
+
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
+                gap: "12px",
+              }}
+            >
+              {(d.allPairs || []).map((pair, idx) => (
+                <div
+                  key={`${pair.giverId}-${pair.receiverId}-${idx}`}
+                  style={{
+                    background: "#fff",
+                    border: "1px solid #FECDD3",
+                    borderRadius: "12px",
+                    padding: "14px",
+                    boxShadow: "0 2px 6px rgba(0,0,0,0.03)",
+                  }}
+                >
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "8px", fontSize: "12px", fontWeight: 700 }}>
+                    <span style={{ color: "var(--brand-blue)" }}>🎅 {pair.giverName}</span>
+                    <span style={{ color: "#E11D48", fontSize: "14px" }}>➔ 🎁</span>
+                    <span style={{ color: "var(--brand-pink)" }}>🎯 {pair.receiverName}</span>
+                  </div>
+                  {pair.giftTitle && (
+                    <div style={{ fontSize: "13px", fontWeight: 800, color: "var(--text-main)", marginBottom: "4px" }}>
+                      🎁 {pair.giftTitle}
+                    </div>
+                  )}
+                  {pair.giftPitch && (
+                    <div style={{ fontSize: "12px", color: "var(--text-muted)", fontStyle: "italic", lineHeight: 1.35 }}>
+                      &ldquo;{pair.giftPitch}&rdquo;
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
         )}
 
         {/* Participants Lobby Card */}

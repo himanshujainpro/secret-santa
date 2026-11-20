@@ -216,6 +216,24 @@ export async function GET() {
     ...(attendees || []).filter((a) => a.id !== me.id),
   ];
 
+  let allPairs = [];
+  if (st.allRevealed && matches) {
+    allPairs = Object.entries(matches).map(([giverId, recvId]) => {
+      let gGift = null;
+      if (gifts[giverId]) {
+        try { gGift = typeof gifts[giverId] === "string" ? JSON.parse(gifts[giverId]) : gifts[giverId]; } catch {}
+      }
+      return {
+        giverId,
+        giverName: players[giverId] || "Mystery Santa",
+        receiverId: recvId,
+        receiverName: players[recvId] || "Teammate",
+        giftTitle: gGift?.title || "Special Mystery Gift",
+        giftPitch: gGift?.pitch || "",
+      };
+    });
+  }
+
   return Response.json({
     now: Date.now(),
     me: { id: me.id, name: me.name, email: me.email, host: me.host, joined: !!players[me.id], isAiInsider: insiderSet.has(me.id) },
@@ -233,6 +251,8 @@ export async function GET() {
     idx: st.idx ?? -1,
     revealed: !!st.revealed,
     giver: st.revealed ? st.giver : "",
+    allRevealed: !!st.allRevealed,
+    allPairs,
     readerId: st.readerId || "",
     category: st.category || "",
     startedAt: st.startedAt || 0,
@@ -278,6 +298,7 @@ export async function POST(req) {
     "roll",
     "next",
     "reveal",
+    "reveal_all",
     "announce",
     "reset",
     "nuclear_reset",
@@ -427,6 +448,10 @@ export async function POST(req) {
     if (!drawn || !recv) return bad("No active pitch.");
     const giver = Object.keys(matches).find((k) => matches[k] === recv) || "";
     await save({ revealed: true, giver });
+  } else if (A === "reveal_all") {
+    if (!drawn) return bad("Draw first.");
+    await save({ allRevealed: true });
+    return Response.json({ ok: true, allRevealed: true });
   } else if (A === "announce") {
     const top = (f) => {
       const c = {};
