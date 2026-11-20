@@ -4,7 +4,15 @@ import { redis } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
 
+let reactionsCache = null;
+let reactionsExpiresAt = 0;
+
 export async function GET() {
+  const now = Date.now();
+  if (reactionsCache && now < reactionsExpiresAt) {
+    return Response.json(reactionsCache);
+  }
+
   const r = redis();
   try {
     const raw = await r.hgetall("fg:ai_reactions");
@@ -14,7 +22,9 @@ export async function GET() {
       banter: parseInt(raw?.banter || "0", 10),
       op: parseInt(raw?.op || "0", 10),
     };
-    return Response.json({ counts, success: true });
+    reactionsCache = { counts, success: true };
+    reactionsExpiresAt = now + 1500;
+    return Response.json(reactionsCache);
   } catch (err) {
     return Response.json({
       counts: { blown: 0, speed: 0, banter: 0, op: 0 },
@@ -24,6 +34,8 @@ export async function GET() {
 }
 
 export async function POST(req) {
+  reactionsCache = null;
+  reactionsExpiresAt = 0;
   const r = redis();
   let body = {};
   try {

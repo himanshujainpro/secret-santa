@@ -245,7 +245,16 @@ export default function Home() {
 
   useEffect(() => {
     load();
-    const pollInterval = setInterval(load, 2000);
+    const pollInterval = setInterval(() => {
+      // If tab is in background (attendee watching Teams call), back off polling to save bandwidth
+      if (typeof document !== "undefined" && document.hidden) {
+        if (Math.random() < 0.33) {
+          load();
+        }
+      } else {
+        load();
+      }
+    }, 2000);
     const clockInterval = setInterval(() => setNow(Date.now()), 500);
     return () => {
       clearInterval(pollInterval);

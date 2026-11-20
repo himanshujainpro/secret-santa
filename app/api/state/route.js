@@ -33,7 +33,7 @@ async function who() {
   return { id: idOf(email), name: s.user.name || email.split("@")[0], email, host: HOSTS.includes(email) };
 }
 
-// In-memory read-through cache (1.2s TTL) to reduce Upstash Redis calls by ~95% during peak polling
+// In-memory read-through cache (1.8s TTL) to reduce Upstash Redis calls by ~95% during peak polling
 let memoryCache = null;
 let cacheExpiresAt = 0;
 
@@ -48,18 +48,19 @@ async function load() {
     return memoryCache;
   }
   const r = redis();
-  const [st, players, matches, votes, gifts, insiders, flowers, chiefGuestRaw, reviewsRaw, attendeesRaw] = await Promise.all([
-    r.get("fg:state"),
-    r.hgetall("fg:players"),
-    r.hgetall("fg:matches"),
-    r.hgetall("fg:votes"),
-    r.hgetall("fg:gifts"),
-    r.smembers("fg:insiders"),
-    r.get("fg:flowers"),
-    r.get("fg:chief_guest"),
-    r.lrange("fg:reviews", 0, 49),
-    r.hgetall("fg:attendees"),
-  ]);
+  const p = r.pipeline();
+  p.get("fg:state");
+  p.hgetall("fg:players");
+  p.hgetall("fg:matches");
+  p.hgetall("fg:votes");
+  p.hgetall("fg:gifts");
+  p.smembers("fg:insiders");
+  p.get("fg:flowers");
+  p.get("fg:chief_guest");
+  p.lrange("fg:reviews", 0, 49);
+  p.hgetall("fg:attendees");
+
+  const [st, players, matches, votes, gifts, insiders, flowers, chiefGuestRaw, reviewsRaw, attendeesRaw] = await p.exec();
   const insiderList = Array.isArray(insiders) ? insiders : [];
   let chiefGuest = null;
   if (chiefGuestRaw) {
@@ -108,7 +109,7 @@ async function load() {
     attendees: attendeesList,
   };
   memoryCache = data;
-  cacheExpiresAt = now + 1200; // 1.2s TTL
+  cacheExpiresAt = now + 1800; // 1.8s TTL
   return data;
 }
 
@@ -375,10 +376,11 @@ export async function POST(req) {
     const s = shuf(ids);
     const m = {};
     s.forEach((g, i) => (m[g] = s[(i + 1) % s.length]));
-    await r.del("fg:matches");
-    await r.del("fg:gifts");
-    await r.hset("fg:matches", m);
-    await r.set("fg:state", {
+    const p = r.pipeline();
+    p.del("fg:matches");
+    p.del("fg:gifts");
+    p.hset("fg:matches", m);
+    p.set("fg:state", {
       phase: "drawn",
       inaugurated: true,
       order: shuf(s),
@@ -390,6 +392,7 @@ export async function POST(req) {
       startedAt: 0,
       results: null,
     });
+    await p.exec();
     invalidateMemoryCache();
   } else if (A === "roll") {
     if (!drawn) return bad("Draw first.");
@@ -464,26 +467,26 @@ export async function POST(req) {
     invalidateMemoryCache();
     return Response.json({ ok: true, review: reviewItem });
   } else if (A === "reset") {
-    await Promise.all([
-      r.del("fg:state"),
-      r.del("fg:matches"),
-      r.del("fg:votes"),
-      r.del("fg:gifts"),
-      r.del("fg:reviews"),
-      r.del("fg:ai_reactions"),
-    ]);
+    const p = r.pipeline();
+    p.del("fg:state");
+    p.del("fg:matches");
+    p.del("fg:votes");
+    p.del("fg:gifts");
+    p.del("fg:reviews");
+    p.del("fg:ai_reactions");
+    await p.exec();
     invalidateMemoryCache();
   } else if (A === "nuclear_reset") {
-    await Promise.all([
-      r.del("fg:state"),
-      r.del("fg:matches"),
-      r.del("fg:votes"),
-      r.del("fg:gifts"),
-      r.del("fg:flowers"),
-      r.del("fg:chief_guest"),
-      r.del("fg:reviews"),
-      r.del("fg:ai_reactions"),
-    ]);
+    const p = r.pipeline();
+    p.del("fg:state");
+    p.del("fg:matches");
+    p.del("fg:votes");
+    p.del("fg:gifts");
+    p.del("fg:flowers");
+    p.del("fg:chief_guest");
+    p.del("fg:reviews");
+    p.del("fg:ai_reactions");
+    await p.exec();
     invalidateMemoryCache();
     return Response.json({ ok: true, cleared: true });
   } else if (A === "vote") {
